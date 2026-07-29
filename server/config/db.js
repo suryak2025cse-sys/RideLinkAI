@@ -4,7 +4,7 @@ const connectDB = async () => {
   try {
     let mongoUri = process.env.MONGO_URI;
     if (!mongoUri || typeof mongoUri !== 'string' || !mongoUri.startsWith('mongodb')) {
-      mongoUri = 'mongodb://127.0.0.1:27017/ridelink_ai';
+      mongoUri = 'mongodb+srv://surya2406:SnxqpyFJDi3RgoOj@suryakavi18.808kvyg.mongodb.net/ridelink_ai?retryWrites=true&w=majority&appName=SURYAKAVI18';
     }
 
     const conn = await mongoose.connect(mongoUri, {
