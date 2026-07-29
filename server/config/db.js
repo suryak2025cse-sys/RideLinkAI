@@ -4,13 +4,16 @@ const connectDB = async () => {
   try {
     let mongoUri = process.env.MONGO_URI;
     if (!mongoUri || typeof mongoUri !== 'string' || !mongoUri.startsWith('mongodb')) {
-      mongoUri = 'https://ridelink-backend-u775.onrender.com/';
+      mongoUri = 'mongodb://127.0.0.1:27017/ridelink_ai';
     }
 
-    const conn = await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 3000 });
-    console.log(`[MongoDB Connected]: ${conn.connection.host}`);
+    const conn = await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000
+    });
+    console.log(`[MongoDB Connected Successfully]: Host=${conn.connection.host}, DB=${conn.connection.name}`);
   } catch (error) {
-    console.log(`[MongoDB Note]: Database connection attempt (${error.message}). Running with resilient fallback mode.`);
+    console.log(`[MongoDB Connection Warning]: ${error.message}. Backend operating in resilient mode.`);
   }
 };
 

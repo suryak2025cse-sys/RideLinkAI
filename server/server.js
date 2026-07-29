@@ -28,25 +28,23 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
   }
 });
 
 // Middleware
 app.use(cors({
-  origin: ['https://ride-link-ai.vercel.app', 'http://localhost:3000', 'http://localhost:3001', '*'],
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 }));
 app.use(express.json());
 
-// Initialize MongoDB Connection
-connectDB();
+// Health check endpoint (Render health check probe)
+app.get('/', (req, res) => {
+  res.json({ status: 'OK', service: 'RideLink AI Express Backend', version: '1.0.0' });
+});
 
-// Attach Socket.io Engine
-socketHandler(io);
-
-// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', service: 'RideLink AI Express Backend', version: '1.0.0' });
 });
@@ -65,10 +63,19 @@ app.use('/api/reviews', reviewRoutes);
 // Error Middleware
 app.use(errorHandler);
 
+// Attach Socket.io Engine
+socketHandler(io);
+
+// Start HTTP Server on 0.0.0.0 immediately for Render / Cloud deployment
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+const HOST = '0.0.0.0';
+
+server.listen(PORT, HOST, () => {
   console.log(`====================================================`);
-  console.log(` 🚗 RideLink AI Express Backend Running on Port ${PORT} `);
+  console.log(` 🚗 RideLink AI Express Backend Bound to ${HOST}:${PORT} `);
   console.log(` ⚡ Socket.io Real-time Engine active`);
   console.log(`====================================================`);
+  
+  // Connect to MongoDB asynchronously after port binding
+  connectDB();
 });
