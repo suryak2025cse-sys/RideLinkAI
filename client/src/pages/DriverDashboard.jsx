@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { Car, PlusCircle, DollarSign, Award, Users, MapPin, Clock, Phone, ArrowRight } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Car, PlusCircle, DollarSign, Award, Users, MapPin, Clock, Phone, ArrowRight, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import ToastNotification from '../components/ToastNotification';
 import API from '../services/api';
 import { addOfferedRide } from '../redux/rideSlice';
@@ -11,12 +11,17 @@ export default function DriverDashboard() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
+  // Driver Verifications Check (Aadhaar & License)
+  const isAadhaarVerified = !!user?.isAadhaarVerified;
+  const isLicenseVerified = !!user?.isLicenseVerified;
+  const isFullyVerified = isAadhaarVerified && isLicenseVerified;
+
   const [originName, setOriginName] = useState('Hostel Block C - North Campus Gate');
   const [destName, setDestName] = useState('Cyber Park Building 4 Main Bay');
   const [departureTime, setDepartureTime] = useState('09:30 AM');
   const [phone, setPhone] = useState(user?.phone || '9025953166');
   const [totalSeats, setTotalSeats] = useState(3);
-  const [pricePerSeat, setPricePerSeat] = useState(65);
+  const [pricePerSeat, setPricePerSeat] = useState(0); // Sample amount defaults to 0
   const [isWomenOnly, setIsWomenOnly] = useState(false);
   const [communityType, setCommunityType] = useState('Open Community');
   
@@ -25,6 +30,15 @@ export default function DriverDashboard() {
 
   const handleOfferRide = async (e) => {
     e.preventDefault();
+    
+    if (!isFullyVerified) {
+      setToast({ 
+        message: '⚠️ Verification Required: Please verify your Aadhaar and Driver License in Profile & Verifications first.', 
+        type: 'error' 
+      });
+      return;
+    }
+
     setLoading(true);
     setToast(null);
 
@@ -48,7 +62,7 @@ export default function DriverDashboard() {
       departureTime: departureTime || '09:30 AM',
       totalSeats: parseInt(totalSeats) || 3,
       availableSeats: parseInt(totalSeats) || 3,
-      pricePerSeat: parseFloat(pricePerSeat) || 65,
+      pricePerSeat: parseFloat(pricePerSeat) || 0,
       communityType: communityType || 'Open Community',
       isWomenOnly: !!isWomenOnly,
       status: 'Scheduled',
@@ -66,7 +80,7 @@ export default function DriverDashboard() {
       localStorage.setItem('local_offered_rides', JSON.stringify(savedRides));
 
       setLoading(false);
-      setToast({ message: '✅ Ride published with departure time & contact details!', type: 'success' });
+      setToast({ message: '✅ Verified Ride published & saved to DB!', type: 'success' });
       setTimeout(() => navigate('/passenger'), 800);
     } catch (err) {
       dispatch(addOfferedRide(rideData));
@@ -75,7 +89,7 @@ export default function DriverDashboard() {
       localStorage.setItem('local_offered_rides', JSON.stringify(savedRides));
 
       setLoading(false);
-      setToast({ message: '✅ Ride published to community network!', type: 'success' });
+      setToast({ message: '✅ Verified Ride published to community network!', type: 'success' });
       setTimeout(() => navigate('/passenger'), 800);
     }
   };
@@ -88,13 +102,13 @@ export default function DriverDashboard() {
       <div className="app-card p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-black text-slate-900">Driver Portal</h2>
-          <p className="text-base text-slate-500">Offer rides, set departure times, and connect with commuters</p>
+          <p className="text-base text-slate-500">Offer verified rides, set departure times, and connect with commuters</p>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="bg-slate-50 border border-slate-200 px-5 py-3 rounded-2xl">
             <span className="text-slate-400 block text-xs font-bold uppercase tracking-wider">WALLET EARNINGS</span>
-            <span className="text-emerald-600 text-xl font-black">₹{user?.walletBalance ? user.walletBalance.toFixed(0) : '1,200'}</span>
+            <span className="text-emerald-600 text-xl font-black">₹{user?.walletBalance ? user.walletBalance.toFixed(0) : '0'}</span>
           </div>
           <div className="bg-slate-50 border border-slate-200 px-5 py-3 rounded-2xl">
             <span className="text-slate-400 block text-xs font-bold uppercase tracking-wider">DRIVER RATING</span>
@@ -103,13 +117,41 @@ export default function DriverDashboard() {
         </div>
       </div>
 
+      {/* Verification Warning Guard if NOT verified */}
+      {!isFullyVerified && (
+        <div className="bg-amber-50 border-2 border-amber-300 p-6 rounded-3xl space-y-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <ShieldAlert className="w-8 h-8 text-amber-600 shrink-0" />
+            <div>
+              <h4 className="font-bold text-amber-900 text-lg">Aadhaar & Driver License Verification Required</h4>
+              <p className="text-amber-700 text-sm">
+                You can only publish rides after completing Aadhaar ID and Driver's License verifications.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/profile"
+            className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-3 rounded-2xl text-sm whitespace-nowrap shadow-md"
+          >
+            Complete Verifications
+          </Link>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Offer Ride Form Column */}
         <div className="lg:col-span-2 app-card p-8 rounded-3xl space-y-6">
-          <div className="flex items-center gap-3">
-            <PlusCircle className="w-6 h-6 text-blue-600" />
-            <h3 className="text-2xl font-bold text-slate-900">Offer a New Community Ride</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <PlusCircle className="w-6 h-6 text-blue-600" />
+              <h3 className="text-2xl font-bold text-slate-900">Offer a New Community Ride</h3>
+            </div>
+            {isFullyVerified && (
+              <span className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4" /> VERIFIED DRIVER
+              </span>
+            )}
           </div>
 
           <form onSubmit={handleOfferRide} className="space-y-5">
@@ -198,7 +240,7 @@ export default function DriverDashboard() {
               </div>
 
               <div>
-                <label className="form-label">Price Per Seat (₹)</label>
+                <label className="form-label">Calculated Fare Per Seat (₹)</label>
                 <div className="relative">
                   <DollarSign className="w-5 h-5 text-emerald-600 absolute left-4 top-4" />
                   <input
@@ -240,10 +282,18 @@ export default function DriverDashboard() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="btn-primary w-full py-4 text-base font-bold shadow-md flex items-center justify-center gap-2"
+              disabled={loading || !isFullyVerified}
+              className={`w-full py-4 text-base font-bold shadow-md flex items-center justify-center gap-2 rounded-2xl transition-all ${
+                isFullyVerified
+                  ? 'btn-primary'
+                  : 'bg-slate-300 text-slate-500 cursor-not-allowed border border-slate-300'
+              }`}
             >
-              <span>{loading ? 'Publishing Ride...' : 'Publish Ride with Departure Time & Contact'}</span>
+              <span>
+                {!isFullyVerified 
+                  ? 'Complete Verifications to Offer Ride' 
+                  : (loading ? 'Publishing Ride...' : 'Publish Ride with Departure Time & Contact')}
+              </span>
               <ArrowRight className="w-5 h-5" />
             </button>
           </form>
@@ -260,7 +310,11 @@ export default function DriverDashboard() {
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-base">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-900">Tata Nexon EV</span>
-                <span className="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-lg text-xs">VERIFIED</span>
+                <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold ${
+                  isFullyVerified ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                }`}>
+                  {isFullyVerified ? 'VERIFIED' : 'PENDING'}
+                </span>
               </div>
               <p className="text-slate-500 font-medium">Plate: KA-01-EQ-9021</p>
               <p className="text-slate-500 font-medium">Contact: {phone}</p>

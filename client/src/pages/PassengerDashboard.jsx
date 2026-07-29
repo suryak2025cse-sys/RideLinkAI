@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Users, Filter, Sparkles, RefreshCw } from 'lucide-react';
+import { Search, MapPin, Users, Filter, Sparkles, RefreshCw, ShieldAlert, Phone, User, X } from 'lucide-react';
 import MatchCard from '../components/MatchCard';
 import MapContainer from '../components/MapContainer';
 import EmptyState from '../components/EmptyState';
 import { CardSkeleton } from '../components/SkeletonLoader';
 import ToastNotification from '../components/ToastNotification';
 import API from '../services/api';
+import { updateUser } from '../redux/authSlice';
 
 export default function PassengerDashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
 
   const [pickup, setPickup] = useState('');
   const [destination, setDestination] = useState('');
@@ -23,6 +25,12 @@ export default function PassengerDashboard() {
   const [loading, setLoading] = useState(true);
   const [bookingRideId, setBookingRideId] = useState(null);
   const [toast, setToast] = useState(null);
+
+  // Emergency Contact Modal State
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+  const [targetBookingRide, setTargetBookingRide] = useState(null);
+  const [emergencyName, setEmergencyName] = useState(user?.emergencyContactName || 'Rajesh K');
+  const [emergencyPhone, setEmergencyPhone] = useState(user?.emergencyContactPhone || '9876543210');
 
   const fetchRides = async () => {
     try {
@@ -38,13 +46,10 @@ export default function PassengerDashboard() {
 
       let fetchedRides = (res.data && res.data.recommendations) ? res.data.recommendations : [];
 
-      // Combine with locally published driver rides for instant cross-tab reactivity
       const localRides = JSON.parse(localStorage.getItem('local_offered_rides') || '[]');
       const combined = [...localRides, ...fetchedRides];
 
-      // Deduplicate by ID
       const uniqueRides = Array.from(new Map(combined.map(r => [r._id, r])).values());
-
       setRides(uniqueRides);
     } catch (err) {
       const localRides = JSON.parse(localStorage.getItem('local_offered_rides') || '[]');
@@ -57,10 +62,9 @@ export default function PassengerDashboard() {
   useEffect(() => {
     fetchRides();
 
-    // Auto-refetch every 3 seconds for real-time dynamic sync
     const interval = setInterval(() => {
       fetchRides();
-    }, 3000);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, [womenOnlyFilter, communityFilter]);
@@ -71,7 +75,35 @@ export default function PassengerDashboard() {
     fetchRides();
   };
 
-  const handleBookRide = async (ride) => {
+  const handleBookRideClick = (ride) => {
+    // Check if user has emergency contact details
+    if (!user?.emergencyContactName || !user?.emergencyContactPhone) {
+      setTargetBookingRide(ride);
+      setShowEmergencyModal(true);
+    } else {
+      executeBooking(ride);
+    }
+  };
+
+  const handleSaveEmergencyContactAndBook = (e) => {
+    e.preventDefault();
+    if (!emergencyName || !emergencyPhone) {
+      setToast({ message: 'Emergency Contact Person Name and Phone Number are required.', type: 'error' });
+      return;
+    }
+
+    dispatch(updateUser({
+      emergencyContactName: emergencyName,
+      emergencyContactPhone: emergencyPhone
+    }));
+
+    setShowEmergencyModal(false);
+    if (targetBookingRide) {
+      executeBooking(targetBookingRide);
+    }
+  };
+
+  const executeBooking = async (ride) => {
     setBookingRideId(ride._id);
     try {
       const res = await API.post('/rides/book', {
@@ -104,6 +136,68 @@ export default function PassengerDashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
       <ToastNotification message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
+
+      {/* Emergency Contact Modal Guard */}
+      {showEmergencyModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="app-card max-w-md w-full p-8 rounded-3xl space-y-5 bg-white shadow-2xl relative">
+            <button
+              onClick={() => setShowEmergencyModal(false)}
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 text-rose-600">
+              <ShieldAlert className="w-7 h-7" />
+              <h3 className="text-xl font-bold text-slate-900">Emergency Contact Required</h3>
+            </div>
+
+            <p className="text-sm text-slate-600">
+              For your safety during community rides, please provide your emergency contact person's name and phone number before booking.
+            </p>
+
+            <form onSubmit={handleSaveEmergencyContactAndBook} className="space-y-4">
+              <div>
+                <label className="form-label">Contact Person Name</label>
+                <div className="relative">
+                  <User className="w-5 h-5 text-slate-400 absolute left-4 top-4" />
+                  <input
+                    type="text"
+                    value={emergencyName}
+                    onChange={(e) => setEmergencyName(e.target.value)}
+                    placeholder="e.g. Rajesh K"
+                    className="form-input pl-12"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="form-label">Emergency Phone Number</label>
+                <div className="relative">
+                  <Phone className="w-5 h-5 text-slate-400 absolute left-4 top-4" />
+                  <input
+                    type="tel"
+                    value={emergencyPhone}
+                    onChange={(e) => setEmergencyPhone(e.target.value)}
+                    placeholder="e.g. 9876543210"
+                    className="form-input pl-12"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="btn-primary w-full py-3.5 text-base font-bold shadow-md"
+              >
+                Save Emergency Details & Confirm Booking
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Header & Live Status */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -255,7 +349,7 @@ export default function PassengerDashboard() {
                 <MatchCard
                   key={ride._id}
                   match={ride}
-                  onBookRide={handleBookRide}
+                  onBookRide={handleBookRideClick}
                   booking={bookingRideId === ride._id}
                 />
               ))}

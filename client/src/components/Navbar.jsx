@@ -1,42 +1,21 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { Shield, Car, User, Award, Wallet, AlertTriangle, MessageSquare, Leaf, LayoutDashboard, LogOut, ChevronDown, LogIn, UserPlus } from 'lucide-react';
+import { Shield, Car, Award, Wallet, AlertTriangle, MessageSquare, Leaf, LayoutDashboard, LogOut, ChevronDown } from 'lucide-react';
 import { toggleSOSModal } from '../redux/safetySlice';
 import { toggleChatDrawer } from '../redux/chatSlice';
-import { logout, setCredentials } from '../redux/authSlice';
+import { logout } from '../redux/authSlice';
 
 export default function Navbar() {
   const { user, token } = useSelector((state) => state.auth);
   const isAuthenticated = !!(user || token);
+  const isAdmin = user?.role === 'Admin' || user?.role === 'CampusAdmin' || user?.email === 'CodeShift@gmail.com';
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-
-  const handleRoleSwitch = (newRole) => {
-    const activeUser = user || {
-      _id: 'user_default',
-      name: 'Surya K',
-      email: 'surya2008sky@gmail.com',
-      trustScore: 94,
-      walletBalance: 250.0
-    };
-    dispatch(setCredentials({
-      user: { ...activeUser, role: newRole },
-      token: localStorage.getItem('token') || 'jwt_token_2026'
-    }));
-    setIsUserMenuOpen(false);
-    if (newRole === 'Admin' || newRole === 'CampusAdmin') {
-      navigate('/admin');
-    } else if (newRole === 'Driver') {
-      navigate('/driver');
-    } else {
-      navigate('/passenger');
-    }
-  };
 
   const isActive = (path) => location.pathname === path;
 
@@ -45,7 +24,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
         {/* Brand Logo */}
-        <Link to={isAuthenticated ? (user?.role === 'Driver' ? '/driver' : '/passenger') : '/login'} className="flex items-center gap-3 group">
+        <Link to={isAdmin ? '/admin' : (user?.role === 'Driver' ? '/driver' : '/passenger')} className="flex items-center gap-3 group">
           <div className="w-11 h-11 rounded-2xl bg-blue-600 flex items-center justify-center shadow-md shadow-blue-600/20 group-hover:scale-105 transition-transform">
             <Car className="w-6 h-6 text-white" />
           </div>
@@ -58,57 +37,62 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Navigation Links - Only visible when Authenticated */}
+        {/* Navigation Links - Hides Admin for regular users */}
         {isAuthenticated ? (
           <div className="hidden md:flex items-center gap-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60 text-base font-semibold text-slate-600">
-            <Link
-              to="/passenger"
-              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                isActive('/passenger') ? 'bg-white text-blue-600 shadow-sm font-bold' : 'hover:text-slate-900'
-              }`}
-            >
-              <Car className="w-4 h-4 text-blue-600" /> Rides
-            </Link>
-            <Link
-              to="/driver"
-              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                isActive('/driver') ? 'bg-white text-blue-600 shadow-sm font-bold' : 'hover:text-slate-900'
-              }`}
-            >
-              <Award className="w-4 h-4 text-emerald-600" /> Driver Portal
-            </Link>
-            <Link
-              to="/women-safety"
-              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                isActive('/women-safety') ? 'bg-pink-50 text-pink-600 shadow-sm font-bold' : 'hover:text-pink-600'
-              }`}
-            >
-              <Shield className="w-4 h-4 text-pink-500" /> Women Safety
-            </Link>
-            <Link
-              to="/carbon-impact"
-              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                isActive('/carbon-impact') ? 'bg-white text-blue-600 shadow-sm font-bold' : 'hover:text-slate-900'
-              }`}
-            >
-              <Leaf className="w-4 h-4 text-emerald-600" /> Eco Impact
-            </Link>
-            <Link
-              to="/community-modes"
-              className={`px-4 py-2 rounded-xl transition-all ${
-                isActive('/community-modes') ? 'bg-white text-blue-600 shadow-sm font-bold' : 'hover:text-slate-900'
-              }`}
-            >
-              Communities
-            </Link>
-            {(user?.role === 'Admin' || user?.role === 'CampusAdmin') && (
+            {!isAdmin && (
+              <>
+                <Link
+                  to="/passenger"
+                  className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
+                    isActive('/passenger') ? 'bg-white text-blue-600 shadow-sm font-bold' : 'hover:text-slate-900'
+                  }`}
+                >
+                  <Car className="w-4 h-4 text-blue-600" /> Rides
+                </Link>
+                <Link
+                  to="/driver"
+                  className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
+                    isActive('/driver') ? 'bg-white text-blue-600 shadow-sm font-bold' : 'hover:text-slate-900'
+                  }`}
+                >
+                  <Award className="w-4 h-4 text-emerald-600" /> Driver Portal
+                </Link>
+                <Link
+                  to="/women-safety"
+                  className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
+                    isActive('/women-safety') ? 'bg-pink-50 text-pink-600 shadow-sm font-bold' : 'hover:text-pink-600'
+                  }`}
+                >
+                  <Shield className="w-4 h-4 text-pink-500" /> Women Safety
+                </Link>
+                <Link
+                  to="/carbon-impact"
+                  className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
+                    isActive('/carbon-impact') ? 'bg-white text-blue-600 shadow-sm font-bold' : 'hover:text-slate-900'
+                  }`}
+                >
+                  <Leaf className="w-4 h-4 text-emerald-600" /> Eco Impact
+                </Link>
+                <Link
+                  to="/community-modes"
+                  className={`px-4 py-2 rounded-xl transition-all ${
+                    isActive('/community-modes') ? 'bg-white text-blue-600 shadow-sm font-bold' : 'hover:text-slate-900'
+                  }`}
+                >
+                  Communities
+                </Link>
+              </>
+            )}
+
+            {isAdmin && (
               <Link
                 to="/admin"
                 className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
                   isActive('/admin') ? 'bg-white text-blue-600 shadow-sm font-bold' : 'hover:text-slate-900'
                 }`}
               >
-                <LayoutDashboard className="w-4 h-4 text-blue-600" /> Admin
+                <LayoutDashboard className="w-4 h-4 text-blue-600" /> Admin Analytics Portal
               </Link>
             )}
           </div>
@@ -140,7 +124,7 @@ export default function Navbar() {
               {/* Wallet Pill */}
               <div className="hidden sm:flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3.5 py-2 rounded-xl text-sm font-bold text-emerald-700">
                 <Wallet className="w-4 h-4 text-emerald-600" />
-                <span>₹{user?.walletBalance ? user.walletBalance.toFixed(0) : '250'}</span>
+                <span>₹{user?.walletBalance ? user.walletBalance.toFixed(0) : '0'}</span>
               </div>
 
               {/* User Profile Menu */}
@@ -162,24 +146,11 @@ export default function Navbar() {
                   <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50">
                     <div className="px-4 py-2 border-b border-slate-100">
                       <p className="text-sm font-bold text-slate-900">{user?.name || 'Commuter'}</p>
-                      <p className="text-xs text-slate-500">{user?.email || 'surya2008sky@gmail.com'}</p>
-                    </div>
-
-                    <div className="py-1">
-                      <p className="px-4 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Switch Mode</p>
-                      <button onClick={() => handleRoleSwitch('Passenger')} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 font-medium">
-                        Passenger Portal
-                      </button>
-                      <button onClick={() => handleRoleSwitch('Driver')} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 font-medium">
-                        Driver Portal
-                      </button>
-                      <button onClick={() => handleRoleSwitch('Admin')} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-purple-50 hover:text-purple-600 font-medium">
-                        Admin Analytics
-                      </button>
+                      <p className="text-xs text-slate-500">{user?.email || 'user@univ.edu'}</p>
                     </div>
 
                     <div className="border-t border-slate-100 pt-1">
-                      <Link to="/profile" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                      <Link to="/profile" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 font-medium">
                         Profile & Verifications
                       </Link>
                       <button
@@ -197,16 +168,7 @@ export default function Navbar() {
                 )}
               </div>
             </>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Link to="/login" className="btn-secondary py-2.5 px-4 text-sm font-bold flex items-center gap-1.5">
-                <LogIn className="w-4 h-4 text-blue-600" /> Sign In
-              </Link>
-              <Link to="/register" className="btn-primary py-2.5 px-4 text-sm font-bold flex items-center gap-1.5">
-                <UserPlus className="w-4 h-4" /> Get Started
-              </Link>
-            </div>
-          )}
+          ) : null}
 
         </div>
 

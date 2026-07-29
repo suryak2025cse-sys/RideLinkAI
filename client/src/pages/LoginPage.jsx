@@ -1,25 +1,63 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Mail, Lock, LogIn, Car } from 'lucide-react';
+import { Mail, Lock, LogIn, Car, ShieldAlert } from 'lucide-react';
 import { setCredentials } from '../redux/authSlice';
 import API from '../services/api';
 import ToastNotification from '../components/ToastNotification';
 
 export default function LoginPage() {
+  const [role, setRole] = useState('Passenger');
   const [email, setEmail] = useState('surya2008sky@gmail.com');
   const [password, setPassword] = useState('password123');
-  const [role, setRole] = useState('Passenger');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const handleRoleChange = (selectedRole) => {
+    setRole(selectedRole);
+    if (selectedRole === 'Admin') {
+      setEmail('CodeShift@gmail.com');
+      setPassword('CodeShift18');
+    } else if (selectedRole === 'Driver') {
+      setEmail('driver@univ.edu');
+      setPassword('password123');
+    } else {
+      setEmail('surya2008sky@gmail.com');
+      setPassword('password123');
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setToast(null);
+
+    // Admin Credentials Validation
+    if (role === 'Admin' || email === 'CodeShift@gmail.com') {
+      if (email === 'CodeShift@gmail.com' && password === 'CodeShift18') {
+        const adminUser = {
+          _id: 'admin_codeshift_2026',
+          name: 'CodeShift Admin',
+          email: 'CodeShift@gmail.com',
+          role: 'Admin',
+          trustScore: 100,
+          trustBadge: 'Platform Super Admin',
+          walletBalance: 0
+        };
+        dispatch(setCredentials({ user: adminUser, token: 'jwt_admin_token_codeshift_2026' }));
+        setToast({ message: '✅ Admin authenticated! Opening Admin Analytics Portal...', type: 'success' });
+        setTimeout(() => navigate('/admin'), 600);
+        setLoading(false);
+        return;
+      } else {
+        setToast({ message: 'Invalid Admin Credentials. Use CodeShift@gmail.com / CodeShift18', type: 'error' });
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       const res = await API.post('/auth/login', { email, password });
@@ -29,14 +67,14 @@ export default function LoginPage() {
           token: res.data.token 
         }));
         setToast({ message: 'Login successful! Opening application...', type: 'success' });
-        setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 800);
+        setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 600);
         return;
       }
     } catch (err) {
-      console.log('[Login Notice]: Creating session for user');
+      console.log('[Login Notice]: Authenticating user session');
     }
 
-    // Direct login session creation
+    // Direct login session creation for passenger/driver
     const loggedInUser = {
       _id: `user_${Date.now()}`,
       name: email.split('@')[0].toUpperCase(),
@@ -46,14 +84,16 @@ export default function LoginPage() {
       gender: 'Male',
       organizationName: 'Sri Eshwar College of Engineering',
       isAadhaarVerified: true,
-      isCollegeCorporateVerified: true,
+      isLicenseVerified: role === 'Driver',
+      emergencyContactName: 'Rajesh K',
+      emergencyContactPhone: '9876543210',
       trustScore: 94,
       trustBadge: 'Highly Trusted',
-      walletBalance: 250.0
+      walletBalance: 0
     };
     dispatch(setCredentials({ user: loggedInUser, token: 'jwt_auth_token_2026' }));
     setToast({ message: 'Login successful! Opening application...', type: 'success' });
-    setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 800);
+    setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 600);
     setLoading(false);
   };
 
@@ -75,21 +115,28 @@ export default function LoginPage() {
           <p className="text-sm font-semibold text-slate-500">Sign in to open the ride-sharing application</p>
         </div>
 
-        {/* Role Selector */}
-        <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 text-sm font-semibold">
-          {['Passenger', 'Driver'].map((r) => (
+        {/* Role Selector Tabs (Passenger, Driver, Admin) */}
+        <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 text-xs font-bold">
+          {['Passenger', 'Driver', 'Admin'].map((r) => (
             <button
               key={r}
               type="button"
-              onClick={() => setRole(r)}
-              className={`py-2 rounded-xl transition-all ${
-                role === r ? 'bg-white text-blue-600 font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              onClick={() => handleRoleChange(r)}
+              className={`py-2.5 rounded-xl transition-all ${
+                role === r ? 'bg-white text-blue-600 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              {r} Portal
+              {r}
             </button>
           ))}
         </div>
+
+        {role === 'Admin' && (
+          <div className="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-xs font-semibold text-amber-800 flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Default Admin: CodeShift@gmail.com / CodeShift18</span>
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
@@ -100,7 +147,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="surya2008sky@gmail.com"
+                placeholder={role === 'Admin' ? 'CodeShift@gmail.com' : 'surya2008sky@gmail.com'}
                 className="form-input pl-12"
                 required
               />
@@ -128,7 +175,7 @@ export default function LoginPage() {
             className="btn-primary w-full py-4 text-base font-bold shadow-md flex items-center justify-center gap-2"
           >
             <LogIn className="w-5 h-5" />
-            <span>{loading ? 'Authenticating...' : 'Sign In & Open App'}</span>
+            <span>{loading ? 'Authenticating...' : `Sign In as ${role}`}</span>
           </button>
         </form>
 
