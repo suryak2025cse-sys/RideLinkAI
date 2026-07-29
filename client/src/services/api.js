@@ -1,12 +1,21 @@
 import axios from 'axios';
 
-// Connect directly to local Express server on port 5000 during local development
-const baseURL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5000/api'
-  : '/api';
+// Live production Render backend URL for RideLink AI
+const LIVE_BACKEND_URL = 'https://ridelink-backend-u775.onrender.com/api';
+
+const getBaseURL = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000/api';
+  }
+  // Production Vercel App connecting to Render Backend
+  return LIVE_BACKEND_URL;
+};
 
 const API = axios.create({
-  baseURL,
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json'
   }
