@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import Navbar from './components/Navbar';
 import SOSModal from './components/SOSModal';
 import SafetyCheckModal from './components/SafetyCheckModal';
@@ -8,7 +9,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
-import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PassengerDashboard from './pages/PassengerDashboard';
@@ -21,6 +21,11 @@ import CarbonDashboardPage from './pages/CarbonDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 
 export default function App() {
+  const { user, token } = useSelector((state) => state.auth);
+  const isAuthenticated = !!(user || token);
+
+  const defaultHome = user?.role === 'Driver' ? '/driver' : '/passenger';
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
@@ -29,11 +34,29 @@ export default function App() {
         <main className="flex-1">
           <ErrorBoundary>
             <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+              {/* Root Route: Strict Auth Guard */}
+              <Route 
+                path="/" 
+                element={
+                  isAuthenticated ? <Navigate to={defaultHome} replace /> : <Navigate to="/login" replace />
+                } 
+              />
+
+              {/* Public Auth Routes */}
+              <Route 
+                path="/login" 
+                element={
+                  isAuthenticated ? <Navigate to={defaultHome} replace /> : <LoginPage />
+                } 
+              />
+              <Route 
+                path="/register" 
+                element={
+                  isAuthenticated ? <Navigate to={defaultHome} replace /> : <RegisterPage />
+                } 
+              />
               
-              {/* Protected Passenger Routes */}
+              {/* Strict Protected Routes (Requires Login) */}
               <Route 
                 path="/passenger" 
                 element={
@@ -42,8 +65,6 @@ export default function App() {
                   </ProtectedRoute>
                 } 
               />
-
-              {/* Protected Driver Routes */}
               <Route 
                 path="/driver" 
                 element={
@@ -52,8 +73,6 @@ export default function App() {
                   </ProtectedRoute>
                 } 
               />
-
-              {/* Protected App Features */}
               <Route 
                 path="/tracking" 
                 element={
@@ -103,15 +122,23 @@ export default function App() {
                 } 
               />
 
-              <Route path="*" element={<Navigate to="/" replace />} />
+              {/* Any unhandled route redirects to /login if unauthenticated */}
+              <Route 
+                path="*" 
+                element={<Navigate to={isAuthenticated ? defaultHome : "/login"} replace />} 
+              />
             </Routes>
           </ErrorBoundary>
         </main>
 
         {/* Global Modals & Drawers */}
-        <SOSModal />
-        <SafetyCheckModal />
-        <ChatDrawer />
+        {isAuthenticated && (
+          <>
+            <SOSModal />
+            <SafetyCheckModal />
+            <ChatDrawer />
+          </>
+        )}
 
         {/* Footer */}
         <footer className="border-t border-slate-200 bg-white py-8 px-4 text-center text-sm text-slate-500 mt-12">
