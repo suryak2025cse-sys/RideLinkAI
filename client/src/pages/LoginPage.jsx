@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Mail, Lock, LogIn, Car, ShieldAlert } from 'lucide-react';
+import { Mail, Lock, LogIn, Car, ShieldAlert, Sparkles } from 'lucide-react';
 import { setCredentials } from '../redux/authSlice';
 import API from '../services/api';
 import ToastNotification from '../components/ToastNotification';
@@ -35,7 +35,6 @@ export default function LoginPage() {
     setLoading(true);
     setToast(null);
 
-    // Admin Credentials Validation
     if (role === 'Admin' || email === 'CodeShift@gmail.com') {
       if (email === 'CodeShift@gmail.com' && password === 'CodeShift18') {
         const adminUser = {
@@ -71,10 +70,9 @@ export default function LoginPage() {
         return;
       }
     } catch (err) {
-      console.log('[Login Notice]: Authenticating user session');
+      console.log('[Login Notice]: Authenticating session');
     }
 
-    // Direct login session creation for passenger/driver
     const loggedInUser = {
       _id: `user_${Date.now()}`,
       name: email.split('@')[0].toUpperCase(),
@@ -98,32 +96,45 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
       <ToastNotification message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
 
-      <div className="max-w-md w-full app-card p-8 rounded-3xl space-y-6 shadow-xl border border-slate-200/80 bg-white">
+      {/* Futuristic Aurora Glow Background Orbs */}
+      <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/3 w-[450px] h-[450px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+
+      <div className="max-w-md w-full app-card p-8 rounded-4xl space-y-7 relative z-10 border border-white/15 bg-slate-900/70 backdrop-blur-2xl shadow-2xl">
         
-        {/* Brand Logo Header */}
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/30 mx-auto mb-2">
-            <Car className="w-8 h-8 text-white" />
+        {/* Brand Logo & Glowing Badge */}
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/30 px-3.5 py-1.5 rounded-full text-xs font-black text-emerald-400 mb-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>AI Mobility Ecosystem Active</span>
           </div>
-          <div className="flex items-center justify-center gap-1">
-            <span className="font-extrabold text-3xl tracking-tight text-slate-900">RideLink</span>
-            <span className="text-blue-600 font-black text-3xl">AI</span>
+
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-500 flex items-center justify-center shadow-glow-indigo mx-auto border border-white/20">
+            <Car className="w-9 h-9 text-white" />
           </div>
-          <p className="text-sm font-semibold text-slate-500">Sign in to open the ride-sharing application</p>
+          
+          <div>
+            <h1 className="font-black text-4xl tracking-tight text-white uppercase font-sans">
+              RideLink <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400">AI</span>
+            </h1>
+            <p className="text-sm font-bold text-slate-400 mt-1">Sign in to launch your mobility dashboard</p>
+          </div>
         </div>
 
-        {/* Role Selector Tabs (Passenger, Driver, Admin) */}
-        <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 text-xs font-bold">
+        {/* Role Selector Tabs */}
+        <div className="grid grid-cols-3 gap-1 bg-slate-950/80 p-1.5 rounded-2xl border border-white/10 text-xs font-black">
           {['Passenger', 'Driver', 'Admin'].map((r) => (
             <button
               key={r}
               type="button"
               onClick={() => handleRoleChange(r)}
-              className={`py-2.5 rounded-xl transition-all ${
-                role === r ? 'bg-white text-blue-600 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'
+              className={`py-3 rounded-xl transition-all uppercase tracking-wider ${
+                role === r 
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-glow-indigo font-black border border-white/20' 
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               {r}
@@ -132,9 +143,9 @@ export default function LoginPage() {
         </div>
 
         {role === 'Admin' && (
-          <div className="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-xs font-semibold text-amber-800 flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>Default Admin: CodeShift@gmail.com / CodeShift18</span>
+          <div className="bg-amber-950/60 border border-amber-500/30 p-3.5 rounded-2xl text-xs font-bold text-amber-300 flex items-center gap-2.5">
+            <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>Admin Access: CodeShift@gmail.com / CodeShift18</span>
           </div>
         )}
 
@@ -172,16 +183,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full py-4 text-base font-bold shadow-md flex items-center justify-center gap-2"
+            className="btn-primary w-full py-4 text-base font-black shadow-glow-indigo flex items-center justify-center gap-2 uppercase tracking-wider mt-2"
           >
             <LogIn className="w-5 h-5" />
-            <span>{loading ? 'Authenticating...' : `Sign In as ${role}`}</span>
+            <span>{loading ? 'Authenticating...' : `Launch ${role} Portal`}</span>
           </button>
         </form>
 
-        <div className="text-center text-sm text-slate-600 pt-2 border-t border-slate-100">
+        <div className="text-center text-sm font-bold text-slate-400 pt-2 border-t border-white/10">
           Don't have an account?{' '}
-          <Link to="/register" className="text-blue-600 font-bold hover:underline">
+          <Link to="/register" className="text-indigo-400 font-extrabold hover:text-indigo-300 hover:underline">
             Create Account
           </Link>
         </div>

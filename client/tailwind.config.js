@@ -8,42 +8,29 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          500: '#3b82f6',
-          600: '#2563eb', // Primary Blue
-          700: '#1d4ed8',
-          900: '#1e3a8a'
-        },
-        slatebg: '#f8fafc',
-        cardbg: '#ffffff',
-        accentPink: '#ec4899',
-        emeraldSuccess: '#10b981',
-        amberWarning: '#f59e0b',
-        roseError: '#ef4444'
+        darkbg: '#060813',
+        darkcard: 'rgba(15, 23, 42, 0.65)',
+        brandBlue: '#6366f1',
+        brandPurple: '#a855f7',
+        brandCyan: '#06b6d4',
+        brandEmerald: '#10b981',
+        brandPink: '#ec4899',
       },
       fontFamily: {
-        sans: ['Inter', 'Poppins', 'system-ui', '-apple-system', 'sans-serif'],
-      },
-      fontSize: {
-        xs: ['0.875rem', { lineHeight: '1.25rem' }],   // 14px
-        sm: ['0.9375rem', { lineHeight: '1.375rem' }], // 15px
-        base: ['1rem', { lineHeight: '1.5rem' }],      // 16px Body minimum
-        lg: ['1.125rem', { lineHeight: '1.75rem' }],   // 18px Button / Subheadings
-        xl: ['1.25rem', { lineHeight: '1.75rem' }],    // 20px
-        '2xl': ['1.5rem', { lineHeight: '2rem' }],     // 24px Heading
-        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],// 30px Heading
-        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],  // 36px Main Banner Heading
+        sans: ['Inter', 'Outfit', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
-        '2xl': '1rem', // 16px rounded corners
-        '3xl': '1.5rem'
+        '3xl': '24px',
+        '4xl': '32px',
       },
       boxShadow: {
-        soft: '0 2px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
-        card: '0 4px 20px -2px rgba(0, 0, 0, 0.06)',
-        blueGlow: '0 4px 20px rgba(37, 99, 235, 0.2)'
+        'glow-indigo': '0 0 35px -5px rgba(99, 102, 241, 0.35)',
+        'glow-emerald': '0 0 35px -5px rgba(16, 185, 129, 0.35)',
+        'glow-purple': '0 0 35px -5px rgba(168, 85, 247, 0.35)',
+        'glass': '0 20px 50px rgba(0, 0, 0, 0.5)',
+      },
+      backgroundImage: {
+        'aurora-mesh': 'radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.25) 0px, transparent 50%), radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.2) 0px, transparent 50%), radial-gradient(at 50% 100%, rgba(6, 182, 212, 0.15) 0px, transparent 50%)',
       }
     },
   },
