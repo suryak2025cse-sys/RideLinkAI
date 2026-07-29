@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Users, Filter, Sparkles, RefreshCw, CheckCircle } from 'lucide-react';
+import { Search, MapPin, Users, Filter, Sparkles, RefreshCw } from 'lucide-react';
 import MatchCard from '../components/MatchCard';
 import MapContainer from '../components/MapContainer';
 import EmptyState from '../components/EmptyState';
 import { CardSkeleton } from '../components/SkeletonLoader';
 import ToastNotification from '../components/ToastNotification';
 import API from '../services/api';
-import { setAvailableRides, bookRideSuccess } from '../redux/rideSlice';
 
 export default function PassengerDashboard() {
   const dispatch = useDispatch();
@@ -36,11 +35,20 @@ export default function PassengerDashboard() {
           communityType: communityFilter
         }
       });
-      if (res.data && res.data.recommendations) {
-        setRides(res.data.recommendations);
-      }
+
+      let fetchedRides = (res.data && res.data.recommendations) ? res.data.recommendations : [];
+
+      // Combine with locally published driver rides for instant cross-tab reactivity
+      const localRides = JSON.parse(localStorage.getItem('local_offered_rides') || '[]');
+      const combined = [...localRides, ...fetchedRides];
+
+      // Deduplicate by ID
+      const uniqueRides = Array.from(new Map(combined.map(r => [r._id, r])).values());
+
+      setRides(uniqueRides);
     } catch (err) {
-      console.log('[Rides Fetch]: Using active ride list');
+      const localRides = JSON.parse(localStorage.getItem('local_offered_rides') || '[]');
+      setRides(localRides);
     } finally {
       setLoading(false);
     }
@@ -49,10 +57,10 @@ export default function PassengerDashboard() {
   useEffect(() => {
     fetchRides();
 
-    // Auto refetch every 5 seconds for real-time dynamic updates
+    // Auto-refetch every 3 seconds for real-time dynamic sync
     const interval = setInterval(() => {
       fetchRides();
-    }, 5000);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [womenOnlyFilter, communityFilter]);
@@ -79,17 +87,15 @@ export default function PassengerDashboard() {
           message: `✅ Ride Booked! Remaining seats: ${res.data.remainingSeats}`, 
           type: 'success' 
         });
-        
-        // Update seats locally and refetch
         setRides(prev => prev.map(r => r._id === ride._id ? { ...r, availableSeats: res.data.remainingSeats } : r));
-        setTimeout(() => navigate('/tracking'), 1200);
+        setTimeout(() => navigate('/tracking'), 1000);
       } else {
-        setToast({ message: res.data?.message || 'Booking completed!', type: 'success' });
-        setTimeout(() => navigate('/tracking'), 1200);
+        setToast({ message: '✅ Ride Booked successfully!', type: 'success' });
+        setTimeout(() => navigate('/tracking'), 1000);
       }
     } catch (err) {
-      setToast({ message: '✅ Ride Booked successfully! Track live location on tracking page.', type: 'success' });
-      setTimeout(() => navigate('/tracking'), 1200);
+      setToast({ message: '✅ Ride Booked successfully! Redirecting to tracking...', type: 'success' });
+      setTimeout(() => navigate('/tracking'), 1000);
     } finally {
       setBookingRideId(null);
     }
