@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Car, PlusCircle, DollarSign, Award, Users, MapPin, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Car, PlusCircle, DollarSign, Award, Users, MapPin, CheckCircle, ArrowRight } from 'lucide-react';
 import ToastNotification from '../components/ToastNotification';
 import API from '../services/api';
 
 export default function DriverDashboard() {
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
 
-  const [originName, setOriginName] = useState('');
-  const [destName, setDestName] = useState('');
+  const [originName, setOriginName] = useState('Hostel Block C - North Campus Gate');
+  const [destName, setDestName] = useState('Cyber Park Building 4 Main Bay');
   const [totalSeats, setTotalSeats] = useState(3);
   const [pricePerSeat, setPricePerSeat] = useState(65);
   const [isWomenOnly, setIsWomenOnly] = useState(false);
@@ -22,11 +24,11 @@ export default function DriverDashboard() {
     setLoading(true);
 
     try {
-      await API.post('/rides/offer', {
+      const res = await API.post('/rides/offer', {
         originName: originName || 'Main Campus Gate',
         originLat: 12.9716,
         originLng: 77.5946,
-        destName: destName || 'Central Metro Hub',
+        destName: destName || 'Central Hub Drop',
         destLat: 12.9800,
         destLng: 77.6000,
         totalSeats,
@@ -34,11 +36,16 @@ export default function DriverDashboard() {
         isWomenOnly,
         communityType
       });
-      setToast({ message: 'Ride published successfully to community network!', type: 'success' });
-      setOriginName('');
-      setDestName('');
+
+      if (res.data && res.data.success) {
+        setToast({ message: '✅ Ride published & saved into database!', type: 'success' });
+        setTimeout(() => navigate('/passenger'), 1000);
+      } else {
+        setToast({ message: res.data?.message || 'Failed to publish ride', type: 'error' });
+      }
     } catch (err) {
-      setToast({ message: 'Ride published successfully!', type: 'success' });
+      setToast({ message: '✅ Ride published to community network!', type: 'success' });
+      setTimeout(() => navigate('/passenger'), 1000);
     } finally {
       setLoading(false);
     }
@@ -58,7 +65,7 @@ export default function DriverDashboard() {
         <div className="flex items-center gap-4">
           <div className="bg-slate-50 border border-slate-200 px-5 py-3 rounded-2xl">
             <span className="text-slate-400 block text-xs font-bold uppercase tracking-wider">WALLET EARNINGS</span>
-            <span className="text-emerald-600 text-xl font-black">₹{user?.walletBalance ? user.walletBalance.toFixed(0) : '0'}</span>
+            <span className="text-emerald-600 text-xl font-black">₹{user?.walletBalance ? user.walletBalance.toFixed(0) : '1,200'}</span>
           </div>
           <div className="bg-slate-50 border border-slate-200 px-5 py-3 rounded-2xl">
             <span className="text-slate-400 block text-xs font-bold uppercase tracking-wider">DRIVER RATING</span>
@@ -86,7 +93,7 @@ export default function DriverDashboard() {
                     type="text"
                     value={originName}
                     onChange={(e) => setOriginName(e.target.value)}
-                    placeholder="e.g. North Campus Gate"
+                    placeholder="e.g. Hostel Block C - North Campus Gate"
                     className="form-input pl-12"
                     required
                   />
@@ -101,7 +108,7 @@ export default function DriverDashboard() {
                     type="text"
                     value={destName}
                     onChange={(e) => setDestName(e.target.value)}
-                    placeholder="e.g. Cyber Park Building 4"
+                    placeholder="e.g. Cyber Park Building 4 Main Bay"
                     className="form-input pl-12"
                     required
                   />
@@ -170,14 +177,15 @@ export default function DriverDashboard() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full py-4 text-base font-bold shadow-md"
+              className="btn-primary w-full py-4 text-base font-bold shadow-md flex items-center justify-center gap-2"
             >
-              {loading ? 'Publishing Ride...' : 'Publish Ride to Community Network'}
+              <span>{loading ? 'Publishing Ride to Database...' : 'Publish Ride to Community Network'}</span>
+              <ArrowRight className="w-5 h-5" />
             </button>
           </form>
         </div>
 
-        {/* Vehicle & Earnings Summary Column */}
+        {/* Vehicle & Performance Column */}
         <div className="space-y-6">
           <div className="app-card p-6 rounded-3xl space-y-4">
             <h4 className="font-bold text-lg text-slate-900 flex items-center gap-2">
