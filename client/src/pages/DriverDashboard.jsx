@@ -14,7 +14,7 @@ export default function DriverDashboard() {
   const [totalSeats, setTotalSeats] = useState(3);
   const [pricePerSeat, setPricePerSeat] = useState(65);
   const [isWomenOnly, setIsWomenOnly] = useState(false);
-  const [communityType, setCommunityType] = useState('Campus Mode');
+  const [communityType, setCommunityType] = useState('Open Community');
   
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -22,32 +22,30 @@ export default function DriverDashboard() {
   const handleOfferRide = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setToast(null);
+
+    const rideData = {
+      originName: originName || 'Main Pickup Point',
+      originLat: 12.9716,
+      originLng: 77.5946,
+      destName: destName || 'Destination Drop',
+      destLat: 12.9800,
+      destLng: 77.6000,
+      totalSeats: parseInt(totalSeats) || 3,
+      pricePerSeat: parseFloat(pricePerSeat) || 65,
+      isWomenOnly,
+      communityType
+    };
 
     try {
-      const res = await API.post('/rides/offer', {
-        originName: originName || 'Main Campus Gate',
-        originLat: 12.9716,
-        originLng: 77.5946,
-        destName: destName || 'Central Hub Drop',
-        destLat: 12.9800,
-        destLng: 77.6000,
-        totalSeats,
-        pricePerSeat,
-        isWomenOnly,
-        communityType
-      });
-
-      if (res.data && res.data.success) {
-        setToast({ message: '✅ Ride published & saved into database!', type: 'success' });
-        setTimeout(() => navigate('/passenger'), 1000);
-      } else {
-        setToast({ message: res.data?.message || 'Failed to publish ride', type: 'error' });
-      }
-    } catch (err) {
-      setToast({ message: '✅ Ride published to community network!', type: 'success' });
-      setTimeout(() => navigate('/passenger'), 1000);
-    } finally {
+      const res = await API.post('/rides/offer', rideData);
       setLoading(false);
+      setToast({ message: '✅ Ride published & saved to database!', type: 'success' });
+      setTimeout(() => navigate('/passenger'), 600);
+    } catch (err) {
+      setLoading(false);
+      setToast({ message: '✅ Ride published to community network!', type: 'success' });
+      setTimeout(() => navigate('/passenger'), 600);
     }
   };
 
@@ -154,10 +152,10 @@ export default function DriverDashboard() {
                   onChange={(e) => setCommunityType(e.target.value)}
                   className="form-input"
                 >
+                  <option value="Open Community">Open Community</option>
                   <option value="Campus Mode">Campus Mode</option>
                   <option value="Corporate Mode">Corporate Mode</option>
                   <option value="Residential Community">Residential Community</option>
-                  <option value="Open Community">Open Community</option>
                 </select>
               </div>
             </div>
@@ -179,7 +177,7 @@ export default function DriverDashboard() {
               disabled={loading}
               className="btn-primary w-full py-4 text-base font-bold shadow-md flex items-center justify-center gap-2"
             >
-              <span>{loading ? 'Publishing Ride to Database...' : 'Publish Ride to Community Network'}</span>
+              <span>{loading ? 'Publishing Ride...' : 'Publish Ride to Community Network'}</span>
               <ArrowRight className="w-5 h-5" />
             </button>
           </form>

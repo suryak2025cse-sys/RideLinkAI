@@ -10,12 +10,12 @@ const getBaseURL = () => {
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:5000/api';
   }
-  // Production Vercel App connecting to Render Backend
   return LIVE_BACKEND_URL;
 };
 
 const API = axios.create({
   baseURL: getBaseURL(),
+  timeout: 6000, // 6-second strict HTTP timeout to prevent stuck loading buttons
   headers: {
     'Content-Type': 'application/json'
   }
