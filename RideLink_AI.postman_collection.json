@@ -1,0 +1,67 @@
+{
+  "info": {
+    "name": "RideLink AI API Collection",
+    "description": "Complete REST API collection for RideLink AI platform and Python AI Microservice",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Priya Sharma\",\n  \"email\": \"priya@univ.edu\",\n  \"password\": \"password123\",\n  \"phone\": \"+91 9876543210\",\n  \"role\": \"Passenger\",\n  \"gender\": \"Female\",\n  \"organizationName\": \"Greenwood Tech University\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/api/auth/register", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"priya@univ.edu\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "http://localhost:5000/api/auth/login", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Microservice",
+      "item": [
+        {
+          "name": "Match Rides",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passengerRequest\": {\n    \"pickupLat\": 12.9716,\n    \"pickupLng\": 77.5946,\n    \"dropLat\": 12.9800,\n    \"dropLng\": 77.6000,\n    \"departureTimeMinutes\": 540,\n    \"seats\": 1,\n    \"womenOnly\": true\n  },\n  \"candidateRides\": []\n}"
+            },
+            "url": { "raw": "http://localhost:5001/matchRide", "protocol": "http", "host": ["localhost"], "port": "5001", "path": ["matchRide"] }
+          }
+        },
+        {
+          "name": "Compute Trust Score",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isAadhaarVerified\": true,\n  \"isLicenseVerified\": true,\n  \"isCollegeCorporateVerified\": true,\n  \"avgRating\": 4.9,\n  \"completedRides\": 35\n}"
+            },
+            "url": { "raw": "http://localhost:5001/trustScore", "protocol": "http", "host": ["localhost"], "port": "5001", "path": ["trustScore"] }
+          }
+        }
+      ]
+    }
+  ]
+}
