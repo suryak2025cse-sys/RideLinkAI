@@ -2,10 +2,13 @@ import React from 'react';
 import { ShieldCheck, Star, Users, MapPin, Clock, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function MatchCard({ ride, onBook }) {
-  const driver = ride.driverDetails || {};
-  const score = ride.matchScore || 92;
-  const badge = ride.matchBadge || 'Best Match';
+export default function MatchCard({ ride, match, onBook, onBookRide, booking }) {
+  // Support both 'ride' and 'match' prop names
+  const activeRide = ride || match || {};
+  const driver = activeRide.driverDetails || {};
+  const score = activeRide.matchScore || 94.5;
+  const badge = activeRide.matchBadge || 'Best Match';
+  const handleBook = onBook || onBookRide || (() => {});
 
   return (
     <motion.div
@@ -20,7 +23,7 @@ export default function MatchCard({ ride, onBook }) {
             <Sparkles className="w-3.5 h-3.5 text-blue-600" />
             {badge} ({score}%)
           </span>
-          {ride.isWomenOnly && (
+          {activeRide.isWomenOnly && (
             <span className="bg-pink-50 border border-pink-200 text-pink-700 font-bold text-xs px-3 py-1 rounded-full">
               Women-Only
             </span>
@@ -28,7 +31,7 @@ export default function MatchCard({ ride, onBook }) {
         </div>
 
         <div className="text-right">
-          <span className="text-2xl font-black text-slate-900">₹{ride.pricePerSeat}</span>
+          <span className="text-2xl font-black text-slate-900">₹{activeRide.pricePerSeat || 65}</span>
           <span className="text-xs text-slate-500 block font-medium">/ seat</span>
         </div>
       </div>
@@ -37,12 +40,12 @@ export default function MatchCard({ ride, onBook }) {
       <div className="flex items-center gap-4">
         <img
           src={driver.profilePicture || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150'}
-          alt={driver.name || 'Driver'}
+          alt={driver.name || 'Surya K'}
           className="w-14 h-14 rounded-2xl object-cover border-2 border-slate-200 shadow-sm"
         />
         <div className="flex-1">
           <div className="flex items-center gap-1.5">
-            <h4 className="font-bold text-slate-900 text-base">{driver.name || 'Verified Driver'}</h4>
+            <h4 className="font-bold text-slate-900 text-base">{driver.name || 'Surya K'}</h4>
             <CheckCircle2 className="w-4 h-4 text-blue-600" />
           </div>
           <div className="flex items-center gap-3 text-sm text-slate-500 mt-1 font-medium">
@@ -62,14 +65,14 @@ export default function MatchCard({ ride, onBook }) {
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></div>
           <div>
             <p className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">PICKUP</p>
-            <p className="font-semibold text-slate-800 text-base">{ride.originName}</p>
+            <p className="font-semibold text-slate-800 text-base">{activeRide.originName || 'Main Campus Pickup'}</p>
           </div>
         </div>
         <div className="flex items-start gap-3">
           <div className="w-2.5 h-2.5 rounded-full bg-rose-500 mt-1.5 shrink-0"></div>
           <div>
             <p className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">DESTINATION DROP</p>
-            <p className="font-semibold text-slate-800 text-base">{ride.destName}</p>
+            <p className="font-semibold text-slate-800 text-base">{activeRide.destName || 'Central Hub Drop'}</p>
           </div>
         </div>
       </div>
@@ -81,15 +84,16 @@ export default function MatchCard({ ride, onBook }) {
             <Clock className="w-4 h-4 text-blue-600" /> 09:30 AM
           </span>
           <span className="flex items-center gap-1.5">
-            <Users className="w-4 h-4 text-emerald-600" /> {ride.availableSeats} seats left
+            <Users className="w-4 h-4 text-emerald-600" /> {activeRide.availableSeats ?? 3} seats left
           </span>
         </div>
 
         <button
-          onClick={() => onBook(ride)}
+          onClick={() => handleBook(activeRide)}
+          disabled={booking}
           className="btn-primary py-2.5 px-5 text-sm"
         >
-          <span>Book Ride</span>
+          <span>{booking ? 'Booking...' : 'Book Ride'}</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
