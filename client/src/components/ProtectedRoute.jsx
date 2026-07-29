@@ -6,14 +6,15 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   const { user, token } = useSelector((state) => state.auth);
   const location = useLocation();
 
-  // If not logged in, redirect to /login
-  if (!token && !user) {
+  const isAuth = !!(user && token);
+
+  // If not logged in, force redirect to /login
+  if (!isAuth) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If role restricted and user does not match
+  // If role restricted and user role does not match
   if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
-    // Redirect drivers to /driver and passengers to /passenger
     const redirectPath = user?.role === 'Driver' ? '/driver' : '/passenger';
     return <Navigate to={redirectPath} replace />;
   }
