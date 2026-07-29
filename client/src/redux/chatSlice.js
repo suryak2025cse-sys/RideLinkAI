@@ -2,7 +2,14 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   isChatDrawerOpen: false,
-  messages: [],
+  activeRecipient: {
+    name: 'Surya K (Driver)',
+    phone: '+91 9025953166',
+    rideId: null
+  },
+  messages: [
+    { id: '1', sender: 'driver', text: 'Hello! I will arrive at the pickup spot at 09:30 AM.', time: '09:20 AM' }
+  ],
   isOtherTyping: false
 };
 
@@ -12,6 +19,9 @@ const chatSlice = createSlice({
   reducers: {
     toggleChatDrawer: (state, action) => {
       state.isChatDrawerOpen = action.payload !== undefined ? action.payload : !state.isChatDrawerOpen;
+    },
+    setActiveRecipient: (state, action) => {
+      state.activeRecipient = action.payload;
     },
     addMessage: (state, action) => {
       state.messages.push(action.payload);
@@ -25,5 +35,5 @@ const chatSlice = createSlice({
   }
 });
 
-export const { toggleChatDrawer, addMessage, setMessages, setOtherTyping } = chatSlice.actions;
+export const { toggleChatDrawer, setActiveRecipient, addMessage, setMessages, setOtherTyping } = chatSlice.actions;
 export default chatSlice.reducer;

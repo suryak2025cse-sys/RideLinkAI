@@ -1,10 +1,11 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import SOSModal from './components/SOSModal';
 import SafetyCheckModal from './components/SafetyCheckModal';
 import ChatDrawer from './components/ChatDrawer';
 import ErrorBoundary from './components/ErrorBoundary';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -31,14 +32,78 @@ export default function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
-              <Route path="/passenger" element={<PassengerDashboard />} />
-              <Route path="/driver" element={<DriverDashboard />} />
-              <Route path="/tracking" element={<RideTrackingPage />} />
-              <Route path="/profile" element={<ProfileVerificationPage />} />
-              <Route path="/women-safety" element={<WomenSafetyPage />} />
-              <Route path="/community-modes" element={<CommunityModesPage />} />
-              <Route path="/carbon-impact" element={<CarbonDashboardPage />} />
-              <Route path="/admin" element={<AdminDashboardPage />} />
+              
+              {/* Protected Passenger Routes */}
+              <Route 
+                path="/passenger" 
+                element={
+                  <ProtectedRoute>
+                    <PassengerDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+
+              {/* Protected Driver Routes */}
+              <Route 
+                path="/driver" 
+                element={
+                  <ProtectedRoute>
+                    <DriverDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+
+              {/* Protected App Features */}
+              <Route 
+                path="/tracking" 
+                element={
+                  <ProtectedRoute>
+                    <RideTrackingPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <ProfileVerificationPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/women-safety" 
+                element={
+                  <ProtectedRoute>
+                    <WomenSafetyPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/community-modes" 
+                element={
+                  <ProtectedRoute>
+                    <CommunityModesPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/carbon-impact" 
+                element={
+                  <ProtectedRoute>
+                    <CarbonDashboardPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute allowedRoles={['Admin', 'CampusAdmin']}>
+                    <AdminDashboardPage />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </ErrorBoundary>
         </main>
