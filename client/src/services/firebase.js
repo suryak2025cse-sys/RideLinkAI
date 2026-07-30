@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyArKReLHdQzxnbeimpiEf0MqDKUvQGK4mk",
@@ -15,7 +15,6 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Force Google to show the account picker window every time
 googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
@@ -34,7 +33,14 @@ export const signInWithGoogleFirebase = async () => {
       }
     };
   } catch (error) {
-    console.error('[Firebase Google Auth Error]:', error.message);
+    console.error('[Firebase Google Auth Error]:', error.code, error.message);
+    if (error.code === 'auth/unauthorized-domain') {
+      return { 
+        success: false, 
+        isUnauthorizedDomain: true,
+        error: 'Domain unauthorized in Firebase. Add localhost and ride-link-ai.vercel.app under Firebase Console -> Authentication -> Settings -> Authorized Domains.' 
+      };
+    }
     return { success: false, error: error.message };
   }
 };

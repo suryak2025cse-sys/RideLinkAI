@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Mail, Lock, LogIn, Car, ShieldAlert } from 'lucide-react';
+import { Mail, Lock, LogIn, Car, ShieldAlert, AlertCircle } from 'lucide-react';
 import { setCredentials } from '../redux/authSlice';
 import API from '../services/api';
 import ToastNotification from '../components/ToastNotification';
@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const [domainError, setDomainError] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -28,12 +29,23 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setToast(null);
+    setDomainError(false);
 
     const firebaseResult = await signInWithGoogleFirebase();
 
+    if (firebaseResult.isUnauthorizedDomain) {
+      setDomainError(true);
+      setToast({ 
+        message: '⚠️ Firebase Domain Notice: Please add localhost and your domain in Firebase Console -> Authentication -> Settings -> Authorized Domains.', 
+        type: 'error' 
+      });
+      setLoading(false);
+      return;
+    }
+
     if (!firebaseResult.success || !firebaseResult.user) {
       setToast({ 
-        message: `⚠️ Google Sign-In Failed or Cancelled: ${firebaseResult.error || 'Please select your Google Account in the popup window.'}`, 
+        message: `⚠️ Google Sign-In: ${firebaseResult.error || 'Please select your Google Account in the popup window.'}`, 
         type: 'error' 
       });
       setLoading(false);
@@ -192,6 +204,21 @@ export default function LoginPage() {
             </button>
           ))}
         </div>
+
+        {/* Firebase Domain Unauthorized Guide Banner */}
+        {domainError && (
+          <div className="bg-amber-50 border border-amber-300 p-4 rounded-2xl text-xs font-semibold text-slate-800 space-y-2">
+            <div className="flex items-center gap-2 font-bold text-amber-900">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+              <span>Firebase Domain Setup Instructions (30 Secs)</span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-slate-600">
+              1. Open <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="underline font-bold text-slate-900">Firebase Console</a> &rarr; <b>ridelinkai-c0199</b><br/>
+              2. Go to <b>Authentication</b> &rarr; <b>Settings</b> &rarr; <b>Authorized domains</b><br/>
+              3. Click <b>Add domain</b> and add: <code className="bg-slate-200 px-1 py-0.5 rounded font-bold">{window.location.hostname}</code>
+            </p>
+          </div>
+        )}
 
         {/* Google Firebase OAuth Button */}
         <button
