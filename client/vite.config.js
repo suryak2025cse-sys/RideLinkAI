@@ -7,7 +7,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://ridelink-backend-u775.onrender.com/api/:path',
         changeOrigin: true
       }
     }
