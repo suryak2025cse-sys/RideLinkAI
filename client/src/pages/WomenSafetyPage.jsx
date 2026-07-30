@@ -1,61 +1,60 @@
 import React from 'react';
-import { Shield, Sparkles, CheckCircle2, PhoneCall, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Shield, Lock, AlertTriangle, Users, Heart, ArrowRight } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { toggleSOSModal } from '../redux/safetySlice';
 
 export default function WomenSafetyPage() {
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
       
-      {/* Header Banner */}
-      <div className="app-card p-8 rounded-3xl border border-pink-200 bg-gradient-to-r from-pink-50 via-white to-purple-50 space-y-4">
-        <div className="inline-flex items-center gap-2 bg-pink-100 border border-pink-200 text-pink-800 px-4 py-1.5 rounded-full text-sm font-bold">
-          <Shield className="w-4 h-4 text-pink-600" /> Exclusive Women Safety Portal
+      {/* Top Banner */}
+      <div className="app-card p-8 rounded-3xl border border-pink-200 bg-gradient-to-r from-pink-50 via-white to-amber-50 space-y-4">
+        <div className="inline-flex items-center gap-2 bg-pink-100 border border-pink-200 text-pink-800 px-4 py-1.5 rounded-full text-sm font-extrabold">
+          <Shield className="w-4 h-4 text-pink-600" /> Women Safety Guard System
         </div>
         <h2 className="text-3xl font-black text-slate-900">Women-Only Community Rides</h2>
-        <p className="text-base text-slate-600 max-w-2xl leading-relaxed">
-          Ride with verified female drivers and passengers. Featuring priority AI matching, verified female badges, 24/7 continuous Guardian telemetry monitoring, and instant emergency escalation.
+        <p className="text-base text-slate-600 max-w-2xl leading-relaxed font-semibold">
+          RideLink AI provides female commuters with verified female drivers, real-time Audio SOS monitoring, emergency contact alerts, and gender-restricted matching.
         </p>
-
         <button
-          onClick={() => navigate('/passenger?womenOnly=true')}
-          className="bg-pink-600 hover:bg-pink-700 text-white font-bold text-base px-6 py-3.5 rounded-2xl shadow-md shadow-pink-600/20 flex items-center gap-2 active:scale-95 transition-all"
+          onClick={() => dispatch(toggleSOSModal(true))}
+          className="btn-danger py-3 px-6 text-sm font-black uppercase tracking-wider flex items-center gap-2"
         >
-          <span>Explore Available Women-Only Rides</span>
-          <ArrowRight className="w-5 h-5" />
+          <AlertTriangle className="w-4 h-4" /> Trigger Emergency SOS
         </button>
       </div>
 
       {/* Safety Features Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="app-card p-8 rounded-3xl space-y-4 border border-pink-100">
-          <div className="w-14 h-14 rounded-2xl bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-600">
-            <CheckCircle2 className="w-7 h-7" />
+        <div className="app-card p-6 rounded-3xl space-y-3 bg-white">
+          <div className="w-12 h-12 rounded-2xl bg-pink-100 text-pink-600 flex items-center justify-center font-black">
+            <Lock className="w-6 h-6" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900">Verified Female Drivers</h3>
-          <p className="text-base text-slate-600 leading-relaxed">
-            Strict Aadhaar & Driver License background verification for all drivers operating on Women Safety Mode.
+          <h3 className="font-extrabold text-xl text-slate-900">Female-Only Matching</h3>
+          <p className="text-sm font-semibold text-slate-500">
+            Passholders can restrict ride searches exclusively to verified female drivers and female co-passengers.
           </p>
         </div>
 
-        <div className="app-card p-8 rounded-3xl space-y-4 border border-pink-100">
-          <div className="w-14 h-14 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
-            <Sparkles className="w-7 h-7" />
+        <div className="app-card p-6 rounded-3xl space-y-3 bg-white">
+          <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-black">
+            <AlertTriangle className="w-6 h-6" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900">Priority AI Matching</h3>
-          <p className="text-base text-slate-600 leading-relaxed">
-            Our AI matching engine prioritizes high Trust Scores (&gt;90) and same-campus female commuter circles.
+          <h3 className="font-extrabold text-xl text-slate-900">1-Tap Emergency SOS</h3>
+          <p className="text-sm font-semibold text-slate-500">
+            Instantly alerts police desk, campus security hotline, and emergency contact numbers with live GPS location.
           </p>
         </div>
 
-        <div className="app-card p-8 rounded-3xl space-y-4 border border-pink-100">
-          <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
-            <PhoneCall className="w-7 h-7" />
+        <div className="app-card p-6 rounded-3xl space-y-3 bg-white">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black">
+            <Users className="w-6 h-6" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900">Emergency SOS Escalation</h3>
-          <p className="text-base text-slate-600 leading-relaxed">
-            Single-tap emergency SOS button automatically pings designated contacts, platform safety leads, and live location coordinates.
+          <h3 className="font-extrabold text-xl text-slate-900">College & Corporate Verification</h3>
+          <p className="text-sm font-semibold text-slate-500">
+            Every user is verified via institutional email, Aadhaar ID, and official organization credentials.
           </p>
         </div>
       </div>
