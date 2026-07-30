@@ -5,16 +5,15 @@ import { Car, PlusCircle, DollarSign, Award, Users, MapPin, Clock, Phone, ArrowR
 import ToastNotification from '../components/ToastNotification';
 import API from '../services/api';
 import { addOfferedRide } from '../redux/rideSlice';
-import { updateUser } from '../redux/authSlice';
 
 export default function DriverDashboard() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
-  // Driver Verifications Check (Aadhaar & License)
-  const isAadhaarVerified = !!(user?.isAadhaarVerified || user?.aadhaarNumber);
-  const isLicenseVerified = !!(user?.isLicenseVerified || user?.licenseNumber || user?.role === 'Driver');
+  // Driver Verifications Check (Requires explicit verification submission in /profile)
+  const isAadhaarVerified = !!(user?.isAadhaarVerified && user?.aadhaarNumber);
+  const isLicenseVerified = !!(user?.isLicenseVerified && user?.licenseNumber);
   const isFullyVerified = isAadhaarVerified && isLicenseVerified;
 
   const [originName, setOriginName] = useState('Hostel Block C - North Campus Gate');
@@ -29,23 +28,15 @@ export default function DriverDashboard() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const handleAutoVerifyDriver = () => {
-    dispatch(updateUser({
-      isAadhaarVerified: true,
-      isLicenseVerified: true,
-      aadhaarNumber: '9081 2345 6789',
-      licenseNumber: 'DL-04-2024-9876543',
-      trustScore: 98,
-      trustBadge: 'Highly Verified Driver'
-    }));
-    setToast({ message: '✅ Driver License & Aadhaar Verified Successfully!', type: 'success' });
-  };
-
   const handleOfferRide = async (e) => {
     e.preventDefault();
 
     if (!isFullyVerified) {
-      handleAutoVerifyDriver();
+      setToast({ 
+        message: '⚠️ Verification Required: Please verify your Aadhaar and Driver License in Profile & Verifications first.', 
+        type: 'error' 
+      });
+      return;
     }
 
     setLoading(true);
@@ -126,24 +117,24 @@ export default function DriverDashboard() {
         </div>
       </div>
 
-      {/* Verification Status Card */}
+      {/* Verification Status Banner */}
       {!isFullyVerified ? (
-        <div className="bg-amber-950/60 border border-amber-500/40 p-6 rounded-3xl space-y-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-amber-950/60 border-2 border-amber-500/40 p-6 rounded-3xl space-y-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <ShieldAlert className="w-8 h-8 text-amber-400 shrink-0" />
             <div>
-              <h4 className="font-bold text-white text-lg">Driver License & Identity Verification</h4>
+              <h4 className="font-bold text-white text-lg">Aadhaar & Driver License Verification Required</h4>
               <p className="text-amber-300 text-sm">
-                Verify your Aadhaar ID and Driver's License to unlock instant ride publishing.
+                You must verify your Aadhaar ID and Driver's License in Profile & Verifications before offering a ride.
               </p>
             </div>
           </div>
-          <button
-            onClick={handleAutoVerifyDriver}
+          <Link
+            to="/profile"
             className="btn-primary py-3 px-6 text-sm font-black uppercase tracking-wider whitespace-nowrap shadow-neon-cyan"
           >
-            Auto-Verify Aadhaar & Driver License
-          </button>
+            Verify Identity in Profile
+          </Link>
         </div>
       ) : (
         <div className="bg-emerald-950/60 border border-emerald-500/40 p-4 rounded-3xl flex items-center justify-between gap-4 text-emerald-400 font-extrabold text-sm px-6 shadow-glow-emerald">
@@ -152,7 +143,7 @@ export default function DriverDashboard() {
             <span>AADHAAR & DRIVER LICENSE FULLY VERIFIED</span>
           </div>
           <span className="bg-emerald-500/20 text-emerald-300 text-xs px-3 py-1 rounded-full uppercase border border-emerald-500/30">
-            Active Driver
+            Active Verified Driver
           </span>
         </div>
       )}
@@ -166,9 +157,13 @@ export default function DriverDashboard() {
               <PlusCircle className="w-6 h-6 text-cyan-400" />
               <h3 className="text-2xl font-bold text-white">Offer a New Community Ride</h3>
             </div>
-            {isFullyVerified && (
+            {isFullyVerified ? (
               <span className="bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 font-extrabold px-3 py-1 rounded-full text-xs flex items-center gap-1">
                 <CheckCircle2 className="w-4 h-4" /> VERIFIED DRIVER
+              </span>
+            ) : (
+              <span className="bg-amber-950/80 border border-amber-500/40 text-amber-400 font-extrabold px-3 py-1 rounded-full text-xs">
+                VERIFICATION REQUIRED
               </span>
             )}
           </div>
@@ -301,10 +296,18 @@ export default function DriverDashboard() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="btn-primary w-full py-4 text-base font-black shadow-neon-cyan flex items-center justify-center gap-2 uppercase tracking-wider"
+              disabled={loading || !isFullyVerified}
+              className={`w-full py-4 text-base font-black shadow-md flex items-center justify-center gap-2 rounded-2xl transition-all uppercase tracking-wider ${
+                isFullyVerified
+                  ? 'btn-primary shadow-neon-cyan'
+                  : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+              }`}
             >
-              <span>{loading ? 'Publishing Ride...' : 'Publish Verified Ride with Departure Time & Contact'}</span>
+              <span>
+                {!isFullyVerified 
+                  ? 'Complete Verifications in Profile to Offer Ride' 
+                  : (loading ? 'Publishing Ride...' : 'Publish Verified Ride with Departure Time & Contact')}
+              </span>
               <ArrowRight className="w-5 h-5" />
             </button>
           </form>
@@ -321,8 +324,10 @@ export default function DriverDashboard() {
             <div className="bg-slate-900 p-4 rounded-2xl border border-white/10 space-y-2 text-base">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-white">Tata Nexon EV</span>
-                <span className="bg-emerald-950 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-lg text-xs font-bold">
-                  VERIFIED
+                <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold ${
+                  isFullyVerified ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/30' : 'bg-amber-950 text-amber-400 border border-amber-500/30'
+                }`}>
+                  {isFullyVerified ? 'VERIFIED' : 'UNVERIFIED'}
                 </span>
               </div>
               <p className="text-slate-400 font-medium">Plate: KA-01-EQ-9021</p>
@@ -342,7 +347,7 @@ export default function DriverDashboard() {
               </div>
               <div className="flex justify-between">
                 <span>Trust Score</span>
-                <span className="font-bold text-cyan-400">98/100</span>
+                <span className="font-bold text-cyan-400">{user?.trustScore || 80}/100</span>
               </div>
             </div>
           </div>

@@ -38,12 +38,14 @@ export default function RegisterPage() {
           role,
           gender,
           organizationName,
-          trustScore: 94,
-          trustBadge: 'Highly Trusted',
-          walletBalance: 250.0
+          isAadhaarVerified: false,
+          isLicenseVerified: false,
+          trustScore: 80,
+          trustBadge: 'New Member',
+          walletBalance: 0
         };
         dispatch(setCredentials({ user: userData, token: res.data.token || 'jwt_token_2026' }));
-        setToast({ message: 'Account created! Opening application...', type: 'success' });
+        setToast({ message: 'Account created! Please verify identity to offer rides.', type: 'success' });
         setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 800);
         return;
       }
@@ -59,14 +61,14 @@ export default function RegisterPage() {
       role,
       gender,
       organizationName: organizationName || 'Sri Eshwar College of Engineering',
-      isAadhaarVerified: true,
-      isCollegeCorporateVerified: true,
-      trustScore: 94,
-      trustBadge: 'Highly Trusted',
-      walletBalance: 250.0
+      isAadhaarVerified: false,
+      isLicenseVerified: false,
+      trustScore: 80,
+      trustBadge: 'New Member',
+      walletBalance: 0
     };
     dispatch(setCredentials({ user: fallbackUser, token: 'jwt_token_2026' }));
-    setToast({ message: 'Account created! Opening application...', type: 'success' });
+    setToast({ message: 'Account created! Please verify identity to offer rides.', type: 'success' });
     setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 800);
     setLoading(false);
   };
