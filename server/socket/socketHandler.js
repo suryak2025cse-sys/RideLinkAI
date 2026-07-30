@@ -8,14 +8,59 @@ const socketHandler = (io) => {
       console.log(`User ${userId} (${role}) joined room: ride_${rideId}`);
     });
 
+    // Real-Time Event Broadcasts
+    socket.on('ride_created', (ride) => {
+      io.emit('ride_created', ride);
+    });
+
+    socket.on('ride_updated', (ride) => {
+      io.emit('ride_updated', ride);
+    });
+
+    socket.on('ride_deleted', (rideId) => {
+      io.emit('ride_deleted', rideId);
+    });
+
+    socket.on('ride_request', (booking) => {
+      io.emit('ride_request', booking);
+    });
+
+    socket.on('ride_accepted', (payload) => {
+      io.emit('ride_accepted', payload);
+    });
+
+    socket.on('ride_rejected', (payload) => {
+      io.emit('ride_rejected', payload);
+    });
+
+    socket.on('trip_started', (payload) => {
+      io.emit('trip_started', payload);
+    });
+
+    socket.on('trip_completed', (payload) => {
+      io.emit('trip_completed', payload);
+    });
+
     // Driver Live Location Updates
-    socket.on('update_driver_location', ({ rideId, driverId, lat, lng, speed, heading }) => {
-      io.to(`ride_${rideId}`).emit('driver_location_changed', {
+    socket.on('driver_location', ({ rideId, driverId, lat, lng, speed, heading }) => {
+      io.emit('driver_location', {
+        rideId,
         driverId,
         lat,
         lng,
         speed: speed || 32.5,
         heading: heading || 180,
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    // Passenger Live Location Updates
+    socket.on('passenger_location', ({ rideId, passengerId, lat, lng }) => {
+      io.emit('passenger_location', {
+        rideId,
+        passengerId,
+        lat,
+        lng,
         timestamp: new Date().toISOString()
       });
     });
@@ -30,7 +75,12 @@ const socketHandler = (io) => {
       socket.to(`ride_${rideId}`).emit('user_typing_status', { senderName, isTyping });
     });
 
-    // Ride Guardian Abnormal Behavior / Deviation alert
+    // Notifications
+    socket.on('notification', (notif) => {
+      io.emit('notification', notif);
+    });
+
+    // Route Guardian Abnormal Behavior / Deviation alert
     socket.on('guardian_deviation_trigger', ({ rideId, driverId, reason, deviationKm }) => {
       io.to(`ride_${rideId}`).emit('guardian_safety_alert', {
         rideId,

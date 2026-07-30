@@ -32,6 +32,9 @@ const io = new Server(server, {
   }
 });
 
+// Attach Socket.io instance to Express App
+app.set('io', io);
+
 // Middleware
 app.use(cors({
   origin: '*',

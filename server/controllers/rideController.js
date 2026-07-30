@@ -5,14 +5,14 @@ const User = require('../models/User');
 const Payment = require('../models/Payment');
 const { matchRidesAI } = require('../services/aiServiceClient');
 
-// Create / Offer a Ride (Persists directly to MongoDB)
+// Create / Offer a Ride (Persists directly to MongoDB and emits Socket.IO event)
 const createRide = async (req, res) => {
   try {
     const { 
       originName, originLat, originLng,
       destName, destLat, destLng,
       departureTime, totalSeats, pricePerSeat,
-      communityType, communityName, isWomenOnly, waypoints
+      communityType, communityName, isWomenOnly, waypoints, organizationName
     } = req.body;
 
     const userId = req.user?._id || new mongoose.Types.ObjectId();
@@ -39,9 +39,10 @@ const createRide = async (req, res) => {
       departureTimeMinutes: 540,
       totalSeats: parseInt(totalSeats) || 3,
       availableSeats: parseInt(totalSeats) || 3,
-      pricePerSeat: parseFloat(pricePerSeat) || 65.0,
+      pricePerSeat: parseFloat(pricePerSeat) || 0,
       communityType: communityType || 'Open Community',
       communityName: communityName || 'Community Network',
+      organizationName: organizationName || (user ? user.organizationName : 'Sri Eshwar College of Engineering'),
       isWomenOnly: !!isWomenOnly,
       waypoints: waypoints || [],
       status: 'Scheduled',
@@ -50,6 +51,13 @@ const createRide = async (req, res) => {
     });
 
     console.log(`[MongoDB Ride Stored Successfully]: ID=${newRide._id}, Origin=${newRide.originName}`);
+
+    // Emit Socket.IO event to all connected clients
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('ride_created', newRide);
+    }
+
     res.status(201).json({ success: true, ride: newRide });
   } catch (error) {
     console.error('[Ride Creation Error]:', error.message);
@@ -62,7 +70,7 @@ const searchAndMatchRides = async (req, res) => {
   try {
     const { 
       pickupLocation, destination, 
-      seats, womenOnly, communityType 
+      seats, womenOnly, communityType, organizationName 
     } = req.query;
 
     const query = { status: { $ne: 'Cancelled' } };
@@ -83,7 +91,6 @@ const searchAndMatchRides = async (req, res) => {
       candidateRides = await Ride.find(query).sort({ createdAt: -1 });
     }
 
-    // If candidateRides is empty, provide dynamic default ride list
     if (!candidateRides || candidateRides.length === 0) {
       candidateRides = await Ride.find({}).sort({ createdAt: -1 });
     }
@@ -98,7 +105,6 @@ const searchAndMatchRides = async (req, res) => {
       communityType: communityType || 'All'
     };
 
-    // Run through AI Matching Engine
     const aiRecommendations = await matchRidesAI(passengerRequest, candidateRides);
 
     res.json({
@@ -135,7 +141,6 @@ const bookRide = async (req, res) => {
     const user = mongoose.connection.readyState === 1 ? await User.findById(userId) : null;
     const totalFare = ride.pricePerSeat * qty;
 
-    // Deduct wallet balance
     if (user) {
       user.walletBalance = Math.max(0, (user.walletBalance || 250) - totalFare);
       await user.save();
@@ -174,6 +179,13 @@ const bookRide = async (req, res) => {
 
     console.log(`[MongoDB Booking Stored]: Ride ID=${ride._id}, Seats Left=${ride.availableSeats}`);
 
+    // Emit Socket.IO real-time events
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('ride_updated', ride);
+      io.emit('ride_request', rideRequest);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Ride booked successfully!',
@@ -182,6 +194,24 @@ const bookRide = async (req, res) => {
     });
   } catch (error) {
     console.error('[Book Ride Error]:', error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const deleteRide = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState === 1) {
+      await Ride.findByIdAndDelete(id);
+    }
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('ride_deleted', id);
+    }
+
+    res.json({ success: true, message: 'Ride deleted successfully' });
+  } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -213,6 +243,11 @@ const updateRideStatus = async (req, res) => {
     ride.status = status;
     await ride.save();
 
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('ride_updated', ride);
+    }
+
     res.json({ success: true, message: `Ride status updated to ${status}`, ride });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -223,6 +258,7 @@ module.exports = {
   createRide,
   searchAndMatchRides,
   bookRide,
+  deleteRide,
   getMyRides,
   updateRideStatus
 };
