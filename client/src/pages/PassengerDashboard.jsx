@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Users, Filter, Sparkles, RefreshCw, ShieldAlert, Phone, User, X, ArrowRight } from 'lucide-react';
+import { Search, MapPin, Users, Filter, Sparkles, RefreshCw, ShieldAlert, Phone, User, X, ArrowRight, Car } from 'lucide-react';
 import MatchCard from '../components/MatchCard';
 import MapContainer from '../components/MapContainer';
 import EmptyState from '../components/EmptyState';
@@ -46,13 +46,26 @@ export default function PassengerDashboard() {
 
       let fetchedRides = (res.data && res.data.recommendations) ? res.data.recommendations : [];
 
-      const localRides = JSON.parse(localStorage.getItem('local_offered_rides') || '[]');
+      let localRides = [];
+      try {
+        localRides = JSON.parse(localStorage.getItem('local_offered_rides')) || [];
+        if (!Array.isArray(localRides)) localRides = [];
+      } catch (e) {
+        localRides = [];
+      }
+
       const combined = [...localRides, ...fetchedRides];
 
-      const uniqueRides = Array.from(new Map(combined.map(r => [r._id, r])).values());
+      const uniqueRides = Array.from(new Map(combined.map(r => [r._id || Math.random(), r])).values());
       setRides(uniqueRides);
     } catch (err) {
-      const localRides = JSON.parse(localStorage.getItem('local_offered_rides') || '[]');
+      let localRides = [];
+      try {
+        localRides = JSON.parse(localStorage.getItem('local_offered_rides')) || [];
+        if (!Array.isArray(localRides)) localRides = [];
+      } catch (e) {
+        localRides = [];
+      }
       setRides(localRides);
     } finally {
       setLoading(false);
@@ -152,7 +165,7 @@ export default function PassengerDashboard() {
               <h3 className="text-xl font-bold text-slate-900">Emergency Contact Required</h3>
             </div>
 
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 font-semibold">
               For your safety during community rides, please provide your emergency contact person's name and phone number before booking.
             </p>
 
@@ -189,7 +202,7 @@ export default function PassengerDashboard() {
 
               <button
                 type="submit"
-                className="btn-primary w-full py-4 text-lg font-black shadow-rapido-yellow"
+                className="btn-primary w-full py-4 text-lg font-black shadow-rapido-yellow text-slate-950"
               >
                 Save Emergency Details & Confirm Booking
               </button>
@@ -347,7 +360,7 @@ export default function PassengerDashboard() {
             <div className="space-y-4">
               {rides.map((ride) => (
                 <MatchCard
-                  key={ride._id}
+                  key={ride._id || Math.random()}
                   match={ride}
                   onBookRide={handleBookRideClick}
                   booking={bookingRideId === ride._id}
