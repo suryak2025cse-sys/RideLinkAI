@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { Shield, Car, Award, Wallet, AlertTriangle, MessageSquare, Leaf, LayoutDashboard, LogOut, ChevronDown, Zap } from 'lucide-react';
+import { Shield, Car, Award, Wallet, AlertTriangle, MessageSquare, Leaf, LayoutDashboard, LogOut, ChevronDown } from 'lucide-react';
 import { toggleSOSModal } from '../redux/safetySlice';
 import { toggleChatDrawer } from '../redux/chatSlice';
 import { logout } from '../redux/authSlice';
@@ -20,67 +20,61 @@ export default function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-2xl border-b border-cyan-500/20 px-4 lg:px-8 py-3.5 shadow-2xl">
+    <nav className="sticky top-0 z-40 bg-white border-b border-slate-200 px-4 lg:px-8 py-3.5 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
-        {/* Brand Logo */}
+        {/* Brand Logo - Rapido Pill Style */}
         <Link to={isAdmin ? '/admin' : (user?.role === 'Driver' ? '/driver' : '/passenger')} className="flex items-center gap-3 group">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-400 via-blue-600 to-purple-600 flex items-center justify-center shadow-neon-cyan group-hover:scale-105 transition-transform border border-cyan-300/50">
-            <Car className="w-6 h-6 text-black" />
+          <div className="bg-amber-400 text-slate-950 font-black px-5 py-2 rounded-full text-xl tracking-tight shadow-sm flex items-center gap-2 border border-amber-300 group-hover:scale-105 transition-transform">
+            <Car className="w-5 h-5 text-slate-950" />
+            <span>ridelink</span>
           </div>
-          <div>
-            <div className="flex items-center gap-1">
-              <span className="font-black text-2xl tracking-tight text-white">RideLink</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 font-black text-2xl">AI</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-cyan-400 font-black tracking-widest uppercase">
-              <Zap className="w-3 h-3 text-cyan-400 fill-cyan-400 animate-bounce" />
-              <span>NEON MOBILITY ENGINE</span>
-            </div>
-          </div>
+          <span className="text-xs font-black bg-slate-950 text-white px-2.5 py-1 rounded-full uppercase tracking-wider hidden sm:inline">
+            AI Rides
+          </span>
         </Link>
 
-        {/* Navigation Links */}
+        {/* Navigation Links - Rapido Underline Style */}
         {isAuthenticated ? (
-          <div className="hidden md:flex items-center gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl border border-cyan-500/20 text-sm font-black text-slate-300 backdrop-blur-xl">
+          <div className="hidden md:flex items-center gap-8 text-base font-bold text-slate-700">
             {!isAdmin && (
               <>
                 <Link
                   to="/passenger"
-                  className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                    isActive('/passenger') ? 'bg-gradient-to-r from-cyan-400 to-blue-600 text-black shadow-neon-cyan font-black' : 'hover:text-cyan-300 hover:bg-white/5'
+                  className={`py-1 transition-all ${
+                    isActive('/passenger') ? 'text-slate-950 font-black border-b-2 border-slate-950' : 'hover:text-slate-950'
                   }`}
                 >
-                  <Car className="w-4 h-4" /> Rides
+                  Home
                 </Link>
                 <Link
                   to="/driver"
-                  className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                    isActive('/driver') ? 'bg-gradient-to-r from-cyan-400 to-blue-600 text-black shadow-neon-cyan font-black' : 'hover:text-cyan-300 hover:bg-white/5'
+                  className={`py-1 transition-all ${
+                    isActive('/driver') ? 'text-slate-950 font-black border-b-2 border-slate-950' : 'hover:text-slate-950'
                   }`}
                 >
-                  <Award className="w-4 h-4" /> Driver Portal
+                  Driver Portal
                 </Link>
                 <Link
                   to="/women-safety"
-                  className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                    isActive('/women-safety') ? 'bg-pink-600/30 text-pink-300 border border-pink-500/40 font-black' : 'hover:text-pink-400 hover:bg-white/5'
+                  className={`py-1 transition-all ${
+                    isActive('/women-safety') ? 'text-pink-600 font-black border-b-2 border-pink-600' : 'hover:text-pink-600'
                   }`}
                 >
-                  <Shield className="w-4 h-4 text-pink-400" /> Women Safety
+                  Safety
                 </Link>
                 <Link
                   to="/carbon-impact"
-                  className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                    isActive('/carbon-impact') ? 'bg-gradient-to-r from-cyan-400 to-blue-600 text-black shadow-neon-cyan font-black' : 'hover:text-cyan-300 hover:bg-white/5'
+                  className={`py-1 transition-all ${
+                    isActive('/carbon-impact') ? 'text-slate-950 font-black border-b-2 border-slate-950' : 'hover:text-slate-950'
                   }`}
                 >
-                  <Leaf className="w-4 h-4" /> Eco Impact
+                  Eco Impact
                 </Link>
                 <Link
                   to="/community-modes"
-                  className={`px-4 py-2 rounded-xl transition-all ${
-                    isActive('/community-modes') ? 'bg-gradient-to-r from-cyan-400 to-blue-600 text-black shadow-neon-cyan font-black' : 'hover:text-cyan-300 hover:bg-white/5'
+                  className={`py-1 transition-all ${
+                    isActive('/community-modes') ? 'text-slate-950 font-black border-b-2 border-slate-950' : 'hover:text-slate-950'
                   }`}
                 >
                   Communities
@@ -91,11 +85,11 @@ export default function Navbar() {
             {isAdmin && (
               <Link
                 to="/admin"
-                className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                  isActive('/admin') ? 'bg-gradient-to-r from-cyan-400 to-blue-600 text-black shadow-neon-cyan font-black' : 'hover:text-cyan-300 hover:bg-white/5'
+                className={`py-1 transition-all ${
+                  isActive('/admin') ? 'text-slate-950 font-black border-b-2 border-slate-950' : 'hover:text-slate-950'
                 }`}
               >
-                <LayoutDashboard className="w-4 h-4" /> Admin Analytics Portal
+                Admin Analytics
               </Link>
             )}
           </div>
@@ -109,7 +103,7 @@ export default function Navbar() {
               {/* Emergency SOS Button */}
               <button
                 onClick={() => dispatch(toggleSOSModal(true))}
-                className="btn-danger py-2.5 px-4 text-xs rounded-xl font-black flex items-center gap-1.5 uppercase tracking-wider animate-pulse"
+                className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold px-4 py-2 rounded-full text-xs flex items-center gap-1.5 uppercase tracking-wider animate-pulse shadow-sm"
               >
                 <AlertTriangle className="w-4 h-4" />
                 <span>SOS</span>
@@ -118,15 +112,15 @@ export default function Navbar() {
               {/* Chat Drawer Toggle */}
               <button
                 onClick={() => dispatch(toggleChatDrawer())}
-                className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyan-400 transition-colors relative border border-cyan-500/30 shadow-md"
+                className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-900 transition-colors border border-slate-200"
                 title="Open Chat"
               >
                 <MessageSquare className="w-5 h-5" />
               </button>
 
               {/* Wallet Pill */}
-              <div className="hidden sm:flex items-center gap-2 bg-slate-900 border border-cyan-500/30 px-3.5 py-2 rounded-xl text-sm font-black text-cyan-400 shadow-neon-cyan">
-                <Wallet className="w-4 h-4 text-cyan-400" />
+              <div className="hidden sm:flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3.5 py-1.5 rounded-full text-sm font-black text-slate-950">
+                <Wallet className="w-4 h-4 text-amber-600" />
                 <span>₹{user?.walletBalance ? user.walletBalance.toFixed(0) : '0'}</span>
               </div>
 
@@ -134,26 +128,26 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 p-1.5 pr-3 rounded-2xl border border-cyan-500/30 transition-colors"
+                  className="flex items-center gap-2 bg-slate-950 hover:bg-slate-900 text-white px-4 py-2 rounded-full font-bold text-sm shadow-sm transition-colors"
                 >
                   <img
                     src={user?.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
                     alt="User"
-                    className="w-8 h-8 rounded-xl object-cover border border-cyan-400"
+                    className="w-6 h-6 rounded-full object-cover border border-amber-400"
                   />
-                  <span className="text-sm font-black text-white hidden sm:inline">{user?.name || 'Account'}</span>
-                  <ChevronDown className="w-4 h-4 text-cyan-400" />
+                  <span className="hidden sm:inline">{user?.name || 'Account'}</span>
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-60 bg-slate-950 border border-cyan-500/30 rounded-2xl shadow-cyber-glass py-2 z-50 backdrop-blur-2xl">
-                    <div className="px-4 py-2 border-b border-white/10">
-                      <p className="text-sm font-extrabold text-white">{user?.name || 'Commuter'}</p>
-                      <p className="text-xs text-slate-400 truncate">{user?.email || 'user@univ.edu'}</p>
+                  <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50">
+                    <div className="px-4 py-2 border-b border-slate-100">
+                      <p className="text-sm font-extrabold text-slate-900">{user?.name || 'Commuter'}</p>
+                      <p className="text-xs text-slate-500 truncate">{user?.email || 'user@univ.edu'}</p>
                     </div>
 
-                    <div className="border-t border-white/10 pt-1">
-                      <Link to="/profile" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm text-cyan-300 hover:bg-cyan-500/10 font-bold">
+                    <div className="border-t border-slate-100 pt-1">
+                      <Link to="/profile" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-amber-50 font-bold">
                         Profile & Verifications
                       </Link>
                       <button
@@ -162,7 +156,7 @@ export default function Navbar() {
                           setIsUserMenuOpen(false);
                           navigate('/login');
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10 font-black flex items-center gap-2 uppercase tracking-wider text-xs"
+                        className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 font-black flex items-center gap-2 uppercase tracking-wider text-xs"
                       >
                         <LogOut className="w-4 h-4" /> Log Out
                       </button>

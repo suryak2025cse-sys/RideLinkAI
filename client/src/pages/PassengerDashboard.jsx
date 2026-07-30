@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Users, Filter, Sparkles, RefreshCw, ShieldAlert, Phone, User, X } from 'lucide-react';
+import { Search, MapPin, Users, Filter, Sparkles, RefreshCw, ShieldAlert, Phone, User, X, ArrowRight } from 'lucide-react';
 import MatchCard from '../components/MatchCard';
 import MapContainer from '../components/MapContainer';
 import EmptyState from '../components/EmptyState';
@@ -29,8 +29,8 @@ export default function PassengerDashboard() {
   // Emergency Contact Modal State
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
   const [targetBookingRide, setTargetBookingRide] = useState(null);
-  const [emergencyName, setEmergencyName] = useState(user?.emergencyContactName || 'Rajesh K');
-  const [emergencyPhone, setEmergencyPhone] = useState(user?.emergencyContactPhone || '9876543210');
+  const [emergencyName, setEmergencyName] = useState(user?.emergencyContactName || '');
+  const [emergencyPhone, setEmergencyPhone] = useState(user?.emergencyContactPhone || '');
 
   const fetchRides = async () => {
     try {
@@ -76,7 +76,6 @@ export default function PassengerDashboard() {
   };
 
   const handleBookRideClick = (ride) => {
-    // Check if user has emergency contact details
     if (!user?.emergencyContactName || !user?.emergencyContactPhone) {
       setTargetBookingRide(ride);
       setShowEmergencyModal(true);
@@ -134,7 +133,7 @@ export default function PassengerDashboard() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
       <ToastNotification message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
 
       {/* Emergency Contact Modal Guard */}
@@ -190,7 +189,7 @@ export default function PassengerDashboard() {
 
               <button
                 type="submit"
-                className="btn-primary w-full py-3.5 text-base font-bold shadow-md"
+                className="btn-primary w-full py-4 text-lg font-black shadow-rapido-yellow"
               >
                 Save Emergency Details & Confirm Booking
               </button>
@@ -199,110 +198,105 @@ export default function PassengerDashboard() {
         </div>
       )}
 
-      {/* Header & Live Status */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 text-sm font-bold text-blue-600 bg-blue-50 px-3.5 py-1 rounded-full mb-1">
-            <Sparkles className="w-4 h-4" /> AI ROUTE & TRUST MATCHING ENGINE
+      {/* Hero Booking Section - Rapido Style */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-2">
+        
+        {/* Left Hero Form */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              India's #1 Community Ride-hailing App
+            </h1>
+            <p className="text-lg font-semibold text-slate-600">
+              Quick, Affordable rides at your doorstep for colleges, companies & daily commuters
+            </p>
           </div>
-          <h2 className="text-3xl font-black text-slate-900">Passenger Commuter Portal</h2>
+
+          <div className="app-card p-6 rounded-3xl space-y-4 bg-white border border-slate-200 shadow-lg">
+            <form onSubmit={handleSearchSubmit} className="space-y-4">
+              <div>
+                <div className="relative">
+                  <div className="w-3 h-3 rounded-full bg-slate-950 absolute left-4 top-5"></div>
+                  <input
+                    type="text"
+                    value={pickup}
+                    onChange={(e) => setPickup(e.target.value)}
+                    placeholder="Enter Pickup Location"
+                    className="form-input pl-11 py-4 text-lg font-semibold text-slate-900 border-slate-300"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="relative">
+                  <div className="w-3 h-3 rounded-full border-2 border-slate-950 absolute left-4 top-5"></div>
+                  <input
+                    type="text"
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                    placeholder="Enter Drop Location"
+                    className="form-input pl-11 py-4 text-lg font-semibold text-slate-900 border-slate-300"
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                className="btn-primary w-full py-4 text-xl font-black shadow-rapido-yellow text-slate-950 rounded-2xl flex items-center justify-center gap-2"
+              >
+                <span>Book Ride</span>
+                <ArrowRight className="w-6 h-6" />
+              </button>
+            </form>
+          </div>
         </div>
 
-        <button
-          onClick={() => { setLoading(true); fetchRides(); }}
-          className="btn-secondary self-start md:self-auto text-sm py-2.5 px-4 flex items-center gap-2"
-        >
-          <RefreshCw className={`w-4 h-4 text-blue-600 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Live Rides</span>
-        </button>
+        {/* Right Hero Illustration Card */}
+        <div className="lg:col-span-5 hidden lg:block">
+          <div className="bg-gradient-to-tr from-amber-100 via-amber-50 to-blue-50 p-8 rounded-4xl border border-amber-200 shadow-sm relative overflow-hidden text-center space-y-4">
+            <div className="w-20 h-20 bg-amber-400 text-slate-950 rounded-3xl flex items-center justify-center mx-auto shadow-md">
+              <Car className="w-10 h-10" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900">AI Ride-Pooling Active</h3>
+            <p className="text-sm font-semibold text-slate-600 max-w-xs mx-auto">
+              Verified drivers travelling on your exact route with instant match scores and safety tracking.
+            </p>
+          </div>
+        </div>
+
       </div>
 
-      {/* Ride Search Form */}
-      <div className="app-card p-6 rounded-3xl space-y-4">
-        <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="form-label">Pickup Location</label>
-            <div className="relative">
-              <MapPin className="w-5 h-5 text-emerald-600 absolute left-4 top-4" />
-              <input
-                type="text"
-                value={pickup}
-                onChange={(e) => setPickup(e.target.value)}
-                placeholder="e.g. Main Gate / Hostel Block C"
-                className="form-input pl-12"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="form-label">Destination</label>
-            <div className="relative">
-              <MapPin className="w-5 h-5 text-rose-600 absolute left-4 top-4" />
-              <input
-                type="text"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                placeholder="e.g. Cyber Park / Tech Hub"
-                className="form-input pl-12"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="form-label">Seats Needed</label>
-            <div className="relative">
-              <Users className="w-5 h-5 text-blue-600 absolute left-4 top-4" />
-              <input
-                type="number"
-                min="1"
-                max="4"
-                value={seats}
-                onChange={(e) => setSeats(parseInt(e.target.value) || 1)}
-                className="form-input pl-12"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-end">
-            <button type="submit" className="btn-primary w-full py-3.5 text-base font-bold shadow-md">
-              <Search className="w-5 h-5" />
-              <span>Search AI Matches</span>
+      {/* Filter Badges Bar */}
+      <div className="app-card p-4 rounded-3xl flex flex-wrap items-center justify-between gap-4 text-sm font-bold bg-white">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-slate-500 font-extrabold flex items-center gap-1">
+            <Filter className="w-4 h-4" /> Filter Community:
+          </span>
+          {['All', 'Campus Mode', 'Corporate Mode', 'Residential Community', 'Open Community'].map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setCommunityFilter(mode)}
+              className={`px-4 py-2 rounded-full transition-all text-xs uppercase tracking-wider ${
+                communityFilter === mode
+                  ? 'bg-slate-950 text-white font-black shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              {mode}
             </button>
-          </div>
-        </form>
-
-        {/* Filter Badges */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100 text-sm">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-slate-500 flex items-center gap-1">
-              <Filter className="w-4 h-4" /> Filter Community:
-            </span>
-            {['All', 'Campus Mode', 'Corporate Mode', 'Residential Community', 'Open Community'].map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setCommunityFilter(mode)}
-                className={`px-3 py-1.5 rounded-full font-semibold transition-all ${
-                  communityFilter === mode
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {mode}
-              </button>
-            ))}
-          </div>
-
-          <label className="flex items-center gap-2 cursor-pointer font-bold text-pink-700 bg-pink-50 border border-pink-200 px-3.5 py-1.5 rounded-full text-xs">
-            <input
-              type="checkbox"
-              checked={womenOnlyFilter}
-              onChange={(e) => setWomenOnlyFilter(e.target.checked)}
-              className="w-4 h-4 accent-pink-600 rounded"
-            />
-            <span>Women Safety Mode Only</span>
-          </label>
+          ))}
         </div>
+
+        <label className="flex items-center gap-2 cursor-pointer font-extrabold text-pink-700 bg-pink-50 border border-pink-200 px-4 py-2 rounded-full text-xs">
+          <input
+            type="checkbox"
+            checked={womenOnlyFilter}
+            onChange={(e) => setWomenOnlyFilter(e.target.checked)}
+            className="w-4 h-4 accent-pink-600 rounded"
+          />
+          <span>Women Safety Mode Only</span>
+        </label>
       </div>
 
       {/* Main Map & Recommendations Grid */}
@@ -310,10 +304,10 @@ export default function PassengerDashboard() {
         
         {/* Left Column: Interactive Map */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="app-card p-4 rounded-3xl space-y-3">
+          <div className="app-card p-4 rounded-3xl space-y-3 bg-white">
             <div className="flex items-center justify-between px-2">
-              <h3 className="font-bold text-base text-slate-900">Live Driver Radar Map</h3>
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+              <h3 className="font-extrabold text-base text-slate-900">Live Driver Radar Map</h3>
+              <span className="text-xs font-black text-emerald-700 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full">
                 ● Live GPS Active
               </span>
             </div>
@@ -324,10 +318,16 @@ export default function PassengerDashboard() {
         {/* Right Column: AI Matched Ride Cards */}
         <div className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-xl text-slate-900">
-              AI Matched Rides ({rides.length})
+            <h3 className="font-black text-2xl text-slate-900">
+              Available Rides ({rides.length})
             </h3>
-            <span className="text-xs text-slate-500 font-semibold">Ordered by AI Match %</span>
+            <button
+              onClick={() => { setLoading(true); fetchRides(); }}
+              className="text-xs font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-full"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-amber-500' : ''}`} />
+              <span>Refresh Rides</span>
+            </button>
           </div>
 
           {loading ? (
@@ -337,8 +337,8 @@ export default function PassengerDashboard() {
             </div>
           ) : rides.length === 0 ? (
             <EmptyState
-              title="No Matching Rides Found"
-              description="No drivers have posted rides matching your current route filters yet. Try offering a ride as a driver or refreshing!"
+              title="No Rides Found"
+              description="No drivers have posted rides matching your current location filters. Offer a ride as a driver or click refresh!"
               icon={Search}
               actionLabel="Refresh Live Matches"
               onAction={fetchRides}
