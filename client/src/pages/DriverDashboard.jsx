@@ -11,7 +11,7 @@ export default function DriverDashboard() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
-  // Driver Verifications Check (Requires explicit verification submission in /profile)
+  // Strict verification check: Requires explicit submission of Aadhaar and License numbers
   const isAadhaarVerified = !!(user?.isAadhaarVerified && user?.aadhaarNumber);
   const isLicenseVerified = !!(user?.isLicenseVerified && user?.licenseNumber);
   const isFullyVerified = isAadhaarVerified && isLicenseVerified;
@@ -21,7 +21,7 @@ export default function DriverDashboard() {
   const [departureTime, setDepartureTime] = useState('09:30 AM');
   const [phone, setPhone] = useState(user?.phone || '9025953166');
   const [totalSeats, setTotalSeats] = useState(3);
-  const [pricePerSeat, setPricePerSeat] = useState(0); // Sample amount defaults to 0
+  const [pricePerSeat, setPricePerSeat] = useState(0);
   const [isWomenOnly, setIsWomenOnly] = useState(false);
   const [communityType, setCommunityType] = useState('Open Community');
   
@@ -33,7 +33,7 @@ export default function DriverDashboard() {
 
     if (!isFullyVerified) {
       setToast({ 
-        message: '⚠️ Verification Required: Please verify your Aadhaar and Driver License in Profile & Verifications first.', 
+        message: '⚠️ Verification Required: Please enter your Aadhaar Card Number and Driver License in Profile & Verifications first.', 
         type: 'error' 
       });
       return;
@@ -49,7 +49,7 @@ export default function DriverDashboard() {
         phone: phone || user?.phone || '+91 9025953166',
         rating: 4.9,
         trustScore: user?.trustScore || 98,
-        trustBadge: user?.trustBadge || 'Highly Verified Driver',
+        trustBadge: user?.trustBadge || 'Verified Driver',
         vehicleModel: 'Tata Nexon EV (KA-01-EQ-9021)',
         plateNumber: 'KA-01-EQ-9021'
       },
@@ -117,7 +117,7 @@ export default function DriverDashboard() {
         </div>
       </div>
 
-      {/* Verification Status Banner */}
+      {/* Verification Warning Banner */}
       {!isFullyVerified ? (
         <div className="bg-amber-950/60 border-2 border-amber-500/40 p-6 rounded-3xl space-y-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -125,7 +125,7 @@ export default function DriverDashboard() {
             <div>
               <h4 className="font-bold text-white text-lg">Aadhaar & Driver License Verification Required</h4>
               <p className="text-amber-300 text-sm">
-                You must verify your Aadhaar ID and Driver's License in Profile & Verifications before offering a ride.
+                Please enter your Aadhaar Card Number and Driver License Number in Profile & Verifications to unlock offering rides.
               </p>
             </div>
           </div>
