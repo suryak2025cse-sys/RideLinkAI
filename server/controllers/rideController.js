@@ -3,6 +3,7 @@ const Ride = require('../models/Ride');
 const RideRequest = require('../models/RideRequest');
 const User = require('../models/User');
 const Payment = require('../models/Payment');
+const Notification = require('../models/Notification');
 const { matchRidesAI } = require('../services/aiServiceClient');
 
 // Create / Offer a Ride (Persists directly to MongoDB and emits Socket.IO event)
@@ -52,7 +53,6 @@ const createRide = async (req, res) => {
 
     console.log(`[MongoDB Ride Stored Successfully]: ID=${newRide._id}, Origin=${newRide.originName}`);
 
-    // Emit Socket.IO event to all connected clients
     const io = req.app.get('io');
     if (io) {
       io.emit('ride_created', newRide);
@@ -118,7 +118,67 @@ const searchAndMatchRides = async (req, res) => {
   }
 };
 
-// Book / Join Ride (Persists to MongoDB)
+// Get Ride By ID
+const getRideById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let ride = null;
+
+    if (mongoose.connection.readyState === 1) {
+      ride = await Ride.findById(id);
+    }
+
+    if (!ride) {
+      return res.status(404).json({ success: false, message: 'Ride not found' });
+    }
+
+    res.json({ success: true, ride });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Update Ride
+const updateRide = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let ride = null;
+
+    if (mongoose.connection.readyState === 1) {
+      ride = await Ride.findByIdAndUpdate(id, req.body, { new: true });
+    }
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('ride_updated', ride || req.body);
+    }
+
+    res.json({ success: true, ride });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Delete Ride
+const deleteRide = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState === 1) {
+      await Ride.findByIdAndDelete(id);
+    }
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('ride_deleted', id);
+    }
+
+    res.json({ success: true, message: 'Ride deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Book / Request Seat
 const bookRide = async (req, res) => {
   try {
     const { rideId, seatsRequested, paymentMethod, pickupName, dropName } = req.body;
@@ -179,7 +239,6 @@ const bookRide = async (req, res) => {
 
     console.log(`[MongoDB Booking Stored]: Ride ID=${ride._id}, Seats Left=${ride.availableSeats}`);
 
-    // Emit Socket.IO real-time events
     const io = req.app.get('io');
     if (io) {
       io.emit('ride_updated', ride);
@@ -198,19 +257,85 @@ const bookRide = async (req, res) => {
   }
 };
 
-const deleteRide = async (req, res) => {
+// Accept Ride Request
+const acceptRideRequest = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { requestId } = req.body;
+    let request = null;
+
     if (mongoose.connection.readyState === 1) {
-      await Ride.findByIdAndDelete(id);
+      request = await RideRequest.findByIdAndUpdate(requestId, { status: 'Accepted' }, { new: true });
     }
 
     const io = req.app.get('io');
     if (io) {
-      io.emit('ride_deleted', id);
+      io.emit('ride_accepted', request || { requestId, status: 'Accepted' });
     }
 
-    res.json({ success: true, message: 'Ride deleted successfully' });
+    res.json({ success: true, message: 'Ride request accepted', request });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Reject Ride Request
+const rejectRideRequest = async (req, res) => {
+  try {
+    const { requestId } = req.body;
+    let request = null;
+
+    if (mongoose.connection.readyState === 1) {
+      request = await RideRequest.findByIdAndUpdate(requestId, { status: 'Rejected' }, { new: true });
+    }
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('ride_rejected', request || { requestId, status: 'Rejected' });
+    }
+
+    res.json({ success: true, message: 'Ride request rejected', request });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Start Trip
+const startTrip = async (req, res) => {
+  try {
+    const { rideId } = req.body;
+    let ride = null;
+
+    if (mongoose.connection.readyState === 1) {
+      ride = await Ride.findByIdAndUpdate(rideId, { status: 'Active' }, { new: true });
+    }
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('trip_started', ride || { rideId, status: 'Active' });
+    }
+
+    res.json({ success: true, message: 'Trip started successfully', ride });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Complete Trip
+const completeTrip = async (req, res) => {
+  try {
+    const { rideId } = req.body;
+    let ride = null;
+
+    if (mongoose.connection.readyState === 1) {
+      ride = await Ride.findByIdAndUpdate(rideId, { status: 'Completed' }, { new: true });
+    }
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('trip_completed', ride || { rideId, status: 'Completed' });
+    }
+
+    res.json({ success: true, message: 'Trip completed successfully', ride });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -257,8 +382,14 @@ const updateRideStatus = async (req, res) => {
 module.exports = {
   createRide,
   searchAndMatchRides,
-  bookRide,
+  getRideById,
+  updateRide,
   deleteRide,
+  bookRide,
+  acceptRideRequest,
+  rejectRideRequest,
+  startTrip,
+  completeTrip,
   getMyRides,
   updateRideStatus
 };
