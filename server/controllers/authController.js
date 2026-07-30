@@ -12,7 +12,83 @@ const generateToken = (user) => {
   );
 };
 
-// Register User (Defaults to Unverified so users MUST verify identity)
+// Google OAuth Authentication Handler
+const googleAuth = async (req, res) => {
+  try {
+    const { name, email, googleId, picture, role } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Google email is required.' });
+    }
+
+    let user;
+
+    if (mongoose.connection.readyState === 1) {
+      user = await User.findOne({ email });
+
+      if (!user) {
+        user = await User.create({
+          name: name || email.split('@')[0],
+          email,
+          phone: '+91 9025953166',
+          role: role || 'Passenger',
+          gender: 'Male',
+          organizationName: 'Sri Eshwar College of Engineering',
+          profilePicture: picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+          isAadhaarVerified: false,
+          isLicenseVerified: false,
+          trustScore: 90,
+          trustBadge: 'Google Verified User'
+        });
+
+        await TrustScore.create({
+          userId: user._id,
+          trustScore: 90.0,
+          trustBadge: 'Google Verified User',
+          badgeColor: 'emerald'
+        }).catch(() => null);
+      }
+    } else {
+      user = {
+        _id: 'google_user_' + Date.now(),
+        name: name || email.split('@')[0],
+        email,
+        phone: '+91 9025953166',
+        role: role || 'Passenger',
+        profilePicture: picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        isAadhaarVerified: false,
+        isLicenseVerified: false,
+        walletBalance: 250.0,
+        trustScore: 90,
+        trustBadge: 'Google Verified User'
+      };
+    }
+
+    const token = generateToken(user);
+    res.json({
+      success: true,
+      message: 'Google Sign-In successful!',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profilePicture: user.profilePicture,
+        isAadhaarVerified: !!user.isAadhaarVerified,
+        isLicenseVerified: !!user.isLicenseVerified,
+        walletBalance: user.walletBalance || 250.0,
+        trustScore: user.trustScore || 90,
+        trustBadge: user.trustBadge || 'Google Verified User'
+      },
+      token
+    });
+  } catch (error) {
+    console.error('[Google Auth Error]:', error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Register User
 const registerUser = async (req, res) => {
   try {
     const { name, email, password, phone, role, gender, organizationName } = req.body;
@@ -215,6 +291,7 @@ const updateProfileVerifications = async (req, res) => {
 };
 
 module.exports = {
+  googleAuth,
   registerUser,
   loginUser,
   getUserProfile,
