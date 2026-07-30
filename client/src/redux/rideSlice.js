@@ -26,13 +26,16 @@ const rideSlice = createSlice({
       state.myOfferedRides.unshift(action.payload);
       state.availableRides.unshift(action.payload);
     },
+    removeOfferedRide: (state, action) => {
+      state.myOfferedRides = state.myOfferedRides.filter(r => r._id !== action.payload);
+      state.availableRides = state.availableRides.filter(r => r._id !== action.payload);
+    },
     setActiveRide: (state, action) => {
       state.activeRide = action.payload;
     },
     bookRideSuccess: (state, action) => {
       const { booking, rideId } = action.payload;
       state.myBookings.unshift(booking);
-      // Update seats on available ride
       const rideIndex = state.availableRides.findIndex(r => r._id === rideId);
       if (rideIndex !== -1) {
         state.availableRides[rideIndex].availableSeats = Math.max(
@@ -57,6 +60,7 @@ const rideSlice = createSlice({
 export const {
   setAvailableRides,
   addOfferedRide,
+  removeOfferedRide,
   setActiveRide,
   bookRideSuccess,
   setSearchParams,

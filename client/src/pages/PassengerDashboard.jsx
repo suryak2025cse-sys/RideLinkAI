@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Users, Filter, Sparkles, RefreshCw, ShieldAlert, Phone, User, X, ArrowRight, Car } from 'lucide-react';
+import { Search, MapPin, Users, Filter, Sparkles, RefreshCw, ShieldAlert, Phone, User, X, ArrowRight, Car, Building, CheckCircle2 } from 'lucide-react';
 import MatchCard from '../components/MatchCard';
 import MapContainer from '../components/MapContainer';
 import EmptyState from '../components/EmptyState';
 import { CardSkeleton } from '../components/SkeletonLoader';
 import ToastNotification from '../components/ToastNotification';
+import VoiceCommandHandler from '../components/VoiceCommandHandler';
 import API from '../services/api';
 import { updateUser } from '../redux/authSlice';
 
@@ -20,6 +21,7 @@ export default function PassengerDashboard() {
   const [seats, setSeats] = useState(1);
   const [womenOnlyFilter, setWomenOnlyFilter] = useState(false);
   const [communityFilter, setCommunityFilter] = useState('All');
+  const [selectedOrganization, setSelectedOrganization] = useState('Sri Eshwar College of Engineering');
   
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,9 +57,17 @@ export default function PassengerDashboard() {
       }
 
       const combined = [...localRides, ...fetchedRides];
-
       const uniqueRides = Array.from(new Map(combined.map(r => [r._id || Math.random(), r])).values());
-      setRides(uniqueRides);
+      
+      // Filter by Organization if Campus Mode or Corporate Mode is active
+      const filteredByOrg = uniqueRides.filter(r => {
+        if (communityFilter === 'Campus Mode' || communityFilter === 'Corporate Mode') {
+          return r.organizationName ? r.organizationName.toLowerCase().includes(selectedOrganization.toLowerCase()) : true;
+        }
+        return true;
+      });
+
+      setRides(filteredByOrg);
     } catch (err) {
       let localRides = [];
       try {
@@ -80,7 +90,7 @@ export default function PassengerDashboard() {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [womenOnlyFilter, communityFilter]);
+  }, [womenOnlyFilter, communityFilter, selectedOrganization]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -152,7 +162,7 @@ export default function PassengerDashboard() {
       {/* Emergency Contact Modal Guard */}
       {showEmergencyModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="app-card max-w-md w-full p-8 rounded-3xl space-y-5 bg-white shadow-2xl relative">
+          <div className="app-card max-w-md w-full p-8 rounded-3xl space-y-5 bg-white shadow-2xl relative border border-slate-200">
             <button
               onClick={() => setShowEmergencyModal(false)}
               className="absolute right-4 top-4 text-slate-400 hover:text-slate-600"
@@ -211,17 +221,23 @@ export default function PassengerDashboard() {
         </div>
       )}
 
-      {/* Hero Booking Section - Rapido Style */}
+      {/* Hero Booking Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-2">
         
         {/* Left Hero Form */}
         <div className="lg:col-span-7 space-y-6">
           <div className="space-y-2">
-            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-              India's #1 Community Ride-hailing App
+            <div className="flex items-center justify-between">
+              <span className="bg-amber-100 text-slate-950 font-black px-3.5 py-1 rounded-full text-xs border border-amber-300">
+                ⚡ SMART AI COMMUNITY MOBILITY
+              </span>
+              <VoiceCommandHandler />
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight pt-1">
+              Smart AI-Powered Community Mobility Platform
             </h1>
             <p className="text-lg font-semibold text-slate-600">
-              Quick, Affordable rides at your doorstep for colleges, companies & daily commuters
+              Quick, verified & affordable last-mile rides for colleges, companies & daily commuters
             </p>
           </div>
 
@@ -279,18 +295,33 @@ export default function PassengerDashboard() {
 
       </div>
 
-      {/* Filter Badges Bar */}
-      <div className="app-card p-4 rounded-3xl flex flex-wrap items-center justify-between gap-4 text-sm font-bold bg-white">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-slate-500 font-extrabold flex items-center gap-1">
-            <Filter className="w-4 h-4" /> Filter Community:
-          </span>
+      {/* Organization & Filter Controls Bar */}
+      <div className="app-card p-5 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4 text-sm font-bold bg-white border border-slate-200">
+        
+        {/* Organization Filter Selector */}
+        <div className="flex items-center gap-3">
+          <Building className="w-5 h-5 text-amber-500 shrink-0" />
+          <span className="font-extrabold text-slate-900 whitespace-nowrap">Organization Filter:</span>
+          <select
+            value={selectedOrganization}
+            onChange={(e) => setSelectedOrganization(e.target.value)}
+            className="form-input py-2 text-xs font-bold text-slate-900 bg-slate-50 border-slate-300"
+          >
+            <option value="Sri Eshwar College of Engineering">Sri Eshwar College of Engineering</option>
+            <option value="Infosys Tech Park">Infosys Tech Park</option>
+            <option value="Cyber City IT Hub">Cyber City IT Hub</option>
+            <option value="Greenwood Residential Colony">Greenwood Residential Colony</option>
+          </select>
+        </div>
+
+        {/* Community Mode Tabs */}
+        <div className="flex flex-wrap items-center gap-2">
           {['All', 'Campus Mode', 'Corporate Mode', 'Residential Community', 'Open Community'].map((mode) => (
             <button
               key={mode}
               type="button"
               onClick={() => setCommunityFilter(mode)}
-              className={`px-4 py-2 rounded-full transition-all text-xs uppercase tracking-wider ${
+              className={`px-3.5 py-1.5 rounded-full transition-all text-xs uppercase tracking-wider ${
                 communityFilter === mode
                   ? 'bg-slate-950 text-white font-black shadow-sm'
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -301,14 +332,14 @@ export default function PassengerDashboard() {
           ))}
         </div>
 
-        <label className="flex items-center gap-2 cursor-pointer font-extrabold text-pink-700 bg-pink-50 border border-pink-200 px-4 py-2 rounded-full text-xs">
+        <label className="flex items-center gap-2 cursor-pointer font-extrabold text-pink-700 bg-pink-50 border border-pink-200 px-3.5 py-1.5 rounded-full text-xs">
           <input
             type="checkbox"
             checked={womenOnlyFilter}
             onChange={(e) => setWomenOnlyFilter(e.target.checked)}
             className="w-4 h-4 accent-pink-600 rounded"
           />
-          <span>Women Safety Mode Only</span>
+          <span>Women Safety Mode</span>
         </label>
       </div>
 
@@ -317,7 +348,7 @@ export default function PassengerDashboard() {
         
         {/* Left Column: Interactive Map */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="app-card p-4 rounded-3xl space-y-3 bg-white">
+          <div className="app-card p-4 rounded-3xl space-y-3 bg-white border border-slate-200">
             <div className="flex items-center justify-between px-2">
               <h3 className="font-extrabold text-base text-slate-900">Live Driver Radar Map</h3>
               <span className="text-xs font-black text-emerald-700 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full">
@@ -350,8 +381,8 @@ export default function PassengerDashboard() {
             </div>
           ) : rides.length === 0 ? (
             <EmptyState
-              title="No Rides Found"
-              description="No drivers have posted rides matching your current location filters. Offer a ride as a driver or click refresh!"
+              title="No Rides Found for Selected Organization"
+              description={`No active rides listed under ${selectedOrganization} right now. Try switching community modes or offer a ride!`}
               icon={Search}
               actionLabel="Refresh Live Matches"
               onAction={fetchRides}

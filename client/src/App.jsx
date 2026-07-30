@@ -7,6 +7,7 @@ import SafetyCheckModal from './components/SafetyCheckModal';
 import ChatDrawer from './components/ChatDrawer';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
+import AISmartCoPilot from './components/AISmartCoPilot';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -19,6 +20,8 @@ import WomenSafetyPage from './pages/WomenSafetyPage';
 import CommunityModesPage from './pages/CommunityModesPage';
 import CarbonDashboardPage from './pages/CarbonDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import DemandHeatmapPage from './pages/DemandHeatmapPage';
+import DriverAnalyticsPage from './pages/DriverAnalyticsPage';
 
 export default function App() {
   const { user, token } = useSelector((state) => state.auth);
@@ -28,7 +31,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans">
         
         {/* Render Navbar ONLY when logged in */}
         {isAuthenticated && <Navbar />}
@@ -72,6 +75,22 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <DriverDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/demand-heatmap" 
+                element={
+                  <ProtectedRoute>
+                    <DemandHeatmapPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/driver-analytics" 
+                element={
+                  <ProtectedRoute>
+                    <DriverAnalyticsPage />
                   </ProtectedRoute>
                 } 
               />
@@ -133,17 +152,18 @@ export default function App() {
           </ErrorBoundary>
         </main>
 
-        {/* Global Modals & Drawers */}
+        {/* Global Modals, Drawers & AI Co-Pilot Assistant */}
         {isAuthenticated && (
           <>
             <SOSModal />
             <SafetyCheckModal />
             <ChatDrawer />
+            <AISmartCoPilot />
 
             <footer className="border-t border-slate-200 bg-white py-8 px-4 text-center text-sm text-slate-500 mt-12">
-              <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-semibold">
                 <p>© 2026 RideLink AI. AI-Powered Community Last-Mile Mobility Ecosystem.</p>
-                <div className="flex gap-4 font-semibold text-slate-600 text-xs">
+                <div className="flex gap-4 font-bold text-slate-600 text-xs">
                   <span>Terms of Service</span>
                   <span>Safety Policy</span>
                   <span>Privacy Portal</span>
