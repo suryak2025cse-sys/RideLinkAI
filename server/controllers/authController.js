@@ -12,7 +12,7 @@ const generateToken = (user) => {
   );
 };
 
-// Register User
+// Register User (Defaults to Unverified so users MUST verify identity)
 const registerUser = async (req, res) => {
   try {
     const { name, email, password, phone, role, gender, organizationName } = req.body;
@@ -40,17 +40,17 @@ const registerUser = async (req, res) => {
         role: role || 'Passenger',
         gender: gender || 'Male',
         organizationName: organizationName || 'Sri Eshwar College of Engineering',
-        isAadhaarVerified: true,
-        isLicenseVerified: true,
-        trustScore: 96,
-        trustBadge: 'Highly Trusted'
+        isAadhaarVerified: false,
+        isLicenseVerified: false,
+        trustScore: 80,
+        trustBadge: 'New Member'
       });
 
       await TrustScore.create({
         userId: user._id,
-        trustScore: 96.0,
-        trustBadge: 'Highly Trusted',
-        badgeColor: 'emerald'
+        trustScore: 80.0,
+        trustBadge: 'New Member',
+        badgeColor: 'amber'
       }).catch(() => null);
     } else {
       user = {
@@ -61,11 +61,11 @@ const registerUser = async (req, res) => {
         role: role || 'Passenger',
         gender: gender || 'Male',
         organizationName: organizationName || 'Sri Eshwar College of Engineering',
-        isAadhaarVerified: true,
-        isLicenseVerified: true,
-        walletBalance: 250.0,
-        trustScore: 96,
-        trustBadge: 'Highly Trusted'
+        isAadhaarVerified: false,
+        isLicenseVerified: false,
+        walletBalance: 0,
+        trustScore: 80,
+        trustBadge: 'New Member'
       };
     }
 
@@ -80,11 +80,11 @@ const registerUser = async (req, res) => {
         role: user.role,
         gender: user.gender,
         organizationName: user.organizationName,
-        isAadhaarVerified: true,
-        isLicenseVerified: true,
-        walletBalance: user.walletBalance || 250.0,
-        trustScore: user.trustScore || 96,
-        trustBadge: user.trustBadge || 'Highly Trusted'
+        isAadhaarVerified: false,
+        isLicenseVerified: false,
+        walletBalance: user.walletBalance || 0,
+        trustScore: user.trustScore || 80,
+        trustBadge: user.trustBadge || 'New Member'
       },
       token
     });
@@ -118,11 +118,11 @@ const loginUser = async (req, res) => {
         role: 'Passenger',
         gender: 'Male',
         organizationName: 'Sri Eshwar College of Engineering',
-        isAadhaarVerified: true,
-        isLicenseVerified: true,
-        walletBalance: 250.0,
-        trustScore: 96,
-        trustBadge: 'Highly Trusted'
+        isAadhaarVerified: false,
+        isLicenseVerified: false,
+        walletBalance: 0,
+        trustScore: 80,
+        trustBadge: 'New Member'
       };
     }
 
@@ -136,11 +136,11 @@ const loginUser = async (req, res) => {
         role: user.role,
         gender: user.gender,
         organizationName: user.organizationName,
-        isAadhaarVerified: true,
-        isLicenseVerified: true,
-        walletBalance: user.walletBalance || 250.0,
-        trustScore: user.trustScore || 96,
-        trustBadge: user.trustBadge || 'Highly Trusted'
+        isAadhaarVerified: !!user.isAadhaarVerified,
+        isLicenseVerified: !!user.isLicenseVerified,
+        walletBalance: user.walletBalance || 0,
+        trustScore: user.trustScore || 80,
+        trustBadge: user.trustBadge || 'New Member'
       },
       token
     });
@@ -162,25 +162,30 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// Update Verifications & Details
+// Update Verifications (Explicit User Action Required)
 const updateProfileVerifications = async (req, res) => {
   try {
     const { aadhaarNumber, licenseNumber, emergencyContacts, preferences } = req.body;
     let user = req.user;
 
+    const isAadhaarGiven = !!(aadhaarNumber && aadhaarNumber.trim().length > 5);
+    const isLicenseGiven = !!(licenseNumber && licenseNumber.trim().length > 5);
+
     if (mongoose.connection.readyState === 1 && req.user?._id) {
       user = await User.findById(req.user._id);
       if (user) {
-        if (aadhaarNumber) {
+        if (isAadhaarGiven) {
           user.aadhaarNumber = aadhaarNumber;
           user.isAadhaarVerified = true;
         }
-        if (licenseNumber) {
+        if (isLicenseGiven) {
           user.licenseNumber = licenseNumber;
           user.isLicenseVerified = true;
         }
-        user.isAadhaarVerified = true;
-        user.isLicenseVerified = true;
+        if (isAadhaarGiven && isLicenseGiven) {
+          user.trustScore = 98;
+          user.trustBadge = 'Highly Verified Driver';
+        }
         if (emergencyContacts) {
           user.emergencyContacts = emergencyContacts;
         }
@@ -196,10 +201,12 @@ const updateProfileVerifications = async (req, res) => {
       message: 'Profile verifications updated successfully',
       user: {
         ...(user ? user._doc : req.user),
-        isAadhaarVerified: true,
-        isLicenseVerified: true,
-        aadhaarNumber: aadhaarNumber || '9081 2345 6789',
-        licenseNumber: licenseNumber || 'DL-04-2024-9876543'
+        isAadhaarVerified: isAadhaarGiven,
+        isLicenseVerified: isLicenseGiven,
+        aadhaarNumber: aadhaarNumber || '',
+        licenseNumber: licenseNumber || '',
+        trustScore: (isAadhaarGiven && isLicenseGiven) ? 98 : 80,
+        trustBadge: (isAadhaarGiven && isLicenseGiven) ? 'Highly Verified Driver' : 'New Member'
       }
     });
   } catch (error) {
