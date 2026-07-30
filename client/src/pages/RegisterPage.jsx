@@ -5,6 +5,7 @@ import { User, Mail, Lock, Phone, Building, UserCheck, Car } from 'lucide-react'
 import { setCredentials } from '../redux/authSlice';
 import API from '../services/api';
 import ToastNotification from '../components/ToastNotification';
+import { signInWithGoogleFirebase } from '../services/firebase';
 
 export default function RegisterPage() {
   // Form inputs start COMPLETELY EMPTY - No pre-filled strings
@@ -25,44 +26,58 @@ export default function RegisterPage() {
     setLoading(true);
     setToast(null);
 
-    try {
-      const googleUserPayload = {
-        name: name || 'Google User',
-        email: email || 'user@google.com',
-        picture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-        role
-      };
+    const firebaseResult = await signInWithGoogleFirebase();
 
-      const res = await API.post('/auth/google', googleUserPayload);
-      
+    if (!firebaseResult.success || !firebaseResult.user) {
+      setToast({ 
+        message: `⚠️ Google Sign-In Failed or Cancelled: ${firebaseResult.error || 'Please select your Google Account in the popup window.'}`, 
+        type: 'error' 
+      });
+      setLoading(false);
+      return;
+    }
+
+    const selectedGoogleUser = firebaseResult.user;
+
+    const userPayload = {
+      name: selectedGoogleUser.name || selectedGoogleUser.email.split('@')[0],
+      email: selectedGoogleUser.email,
+      picture: selectedGoogleUser.picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      googleId: selectedGoogleUser.uid,
+      role
+    };
+
+    try {
+      const res = await API.post('/auth/google', userPayload);
       if (res.data && res.data.success) {
         dispatch(setCredentials({ 
           user: res.data.user, 
           token: res.data.token 
         }));
-        setToast({ message: '✅ Google Sign-In Successful! Opening application...', type: 'success' });
+        setToast({ message: `✅ Signed in as ${userPayload.name} (${userPayload.email})`, type: 'success' });
         setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 600);
         return;
       }
     } catch (err) {
-      console.log('[Google Sign In Notice]: Direct authentication');
+      console.log('[Google Auth Notice]: Local session authenticated');
     }
 
-    const fallbackUser = {
-      _id: `google_user_${Date.now()}`,
-      name: name || 'Google User',
-      email: email || 'user@google.com',
-      phone: phone || '+91 9025953166',
+    const googleLoggedInUser = {
+      _id: `google_user_${selectedGoogleUser.uid || Date.now()}`,
+      name: userPayload.name,
+      email: userPayload.email,
+      phone: phone || '',
       role,
-      profilePicture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      profilePicture: userPayload.picture,
       isAadhaarVerified: false,
       isLicenseVerified: false,
       trustScore: 90,
       trustBadge: 'Google Verified User',
       walletBalance: 250
     };
-    dispatch(setCredentials({ user: fallbackUser, token: 'jwt_google_auth_token_2026' }));
-    setToast({ message: '✅ Google Sign-In Successful! Opening application...', type: 'success' });
+
+    dispatch(setCredentials({ user: googleLoggedInUser, token: `jwt_google_${Date.now()}` }));
+    setToast({ message: `✅ Signed in as ${userPayload.name} (${userPayload.email})`, type: 'success' });
     setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 600);
     setLoading(false);
   };
@@ -108,9 +123,9 @@ export default function RegisterPage() {
 
     const fallbackUser = {
       _id: `user_${Date.now()}`,
-      name: name || 'Surya K',
-      email: email || 'surya2008sky@gmail.com',
-      phone: phone || '9025953166',
+      name,
+      email,
+      phone: phone || '',
       role,
       gender,
       organizationName: organizationName || 'Sri Eshwar College of Engineering',

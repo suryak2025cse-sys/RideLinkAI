@@ -15,6 +15,11 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
+// Force Google to show the account picker window every time
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
+
 export const signInWithGoogleFirebase = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);

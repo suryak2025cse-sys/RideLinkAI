@@ -10,7 +10,7 @@ import { signInWithGoogleFirebase } from '../services/firebase';
 export default function LoginPage() {
   const [role, setRole] = useState('Passenger');
 
-  // Inputs start COMPLETELY EMPTY - No pre-filled strings
+  // Form inputs start COMPLETELY EMPTY - No pre-filled strings
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,22 +31,24 @@ export default function LoginPage() {
 
     const firebaseResult = await signInWithGoogleFirebase();
 
-    let userPayload = {
-      name: 'Surya K',
-      email: 'surya2008sky@gmail.com',
-      picture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    if (!firebaseResult.success || !firebaseResult.user) {
+      setToast({ 
+        message: `⚠️ Google Sign-In Failed or Cancelled: ${firebaseResult.error || 'Please select your Google Account in the popup window.'}`, 
+        type: 'error' 
+      });
+      setLoading(false);
+      return;
+    }
+
+    const selectedGoogleUser = firebaseResult.user;
+
+    const userPayload = {
+      name: selectedGoogleUser.name || selectedGoogleUser.email.split('@')[0],
+      email: selectedGoogleUser.email,
+      picture: selectedGoogleUser.picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      googleId: selectedGoogleUser.uid,
       role
     };
-
-    if (firebaseResult.success && firebaseResult.user) {
-      userPayload = {
-        name: firebaseResult.user.name || 'Google User',
-        email: firebaseResult.user.email,
-        picture: firebaseResult.user.picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-        googleId: firebaseResult.user.uid,
-        role
-      };
-    }
 
     try {
       const res = await API.post('/auth/google', userPayload);
@@ -55,7 +57,7 @@ export default function LoginPage() {
           user: res.data.user, 
           token: res.data.token 
         }));
-        setToast({ message: `✅ Authenticated as ${userPayload.name} via Firebase Google Auth!`, type: 'success' });
+        setToast({ message: `✅ Signed in as ${userPayload.name} (${userPayload.email})`, type: 'success' });
         setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 600);
         return;
       }
@@ -63,11 +65,11 @@ export default function LoginPage() {
       console.log('[Google Auth Notice]: Local session authenticated');
     }
 
-    const fallbackUser = {
-      _id: `google_user_${Date.now()}`,
+    const googleLoggedInUser = {
+      _id: `google_user_${selectedGoogleUser.uid || Date.now()}`,
       name: userPayload.name,
       email: userPayload.email,
-      phone: '+91 9025953166',
+      phone: '',
       role,
       profilePicture: userPayload.picture,
       isAadhaarVerified: false,
@@ -77,8 +79,8 @@ export default function LoginPage() {
       walletBalance: 250
     };
 
-    dispatch(setCredentials({ user: fallbackUser, token: 'jwt_google_auth_token_2026' }));
-    setToast({ message: `✅ Authenticated as ${userPayload.name} via Firebase Google Auth!`, type: 'success' });
+    dispatch(setCredentials({ user: googleLoggedInUser, token: `jwt_google_${Date.now()}` }));
+    setToast({ message: `✅ Signed in as ${userPayload.name} (${userPayload.email})`, type: 'success' });
     setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 600);
     setLoading(false);
   };
@@ -136,7 +138,7 @@ export default function LoginPage() {
       _id: `user_${Date.now()}`,
       name: email.split('@')[0].toUpperCase(),
       email,
-      phone: '+91 9025953166',
+      phone: '',
       role,
       gender: 'Male',
       organizationName: 'Sri Eshwar College of Engineering',
