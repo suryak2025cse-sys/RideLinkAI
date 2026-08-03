@@ -8,7 +8,6 @@ import ToastNotification from '../components/ToastNotification';
 import { signInWithGoogleFirebase } from '../services/firebase';
 
 export default function RegisterPage() {
-  // Form inputs start COMPLETELY EMPTY - No pre-filled strings
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +29,7 @@ export default function RegisterPage() {
 
     if (!firebaseResult.success || !firebaseResult.user) {
       setToast({ 
-        message: `⚠️ Google Sign-In Failed or Cancelled: ${firebaseResult.error || 'Please select your Google Account in the popup window.'}`, 
+        message: `⚠️ Google Sign-In Failed: ${firebaseResult.error || 'Please select your Google Account.'}`, 
         type: 'error' 
       });
       setLoading(false);
@@ -59,27 +58,10 @@ export default function RegisterPage() {
         return;
       }
     } catch (err) {
-      console.log('[Google Auth Notice]: Local session authenticated');
+      setToast({ message: err.response?.data?.message || 'Google Registration failed.', type: 'error' });
+    } finally {
+      setLoading(false);
     }
-
-    const googleLoggedInUser = {
-      _id: `google_user_${selectedGoogleUser.uid || Date.now()}`,
-      name: userPayload.name,
-      email: userPayload.email,
-      phone: phone || '',
-      role,
-      profilePicture: userPayload.picture,
-      isAadhaarVerified: false,
-      isLicenseVerified: false,
-      trustScore: 90,
-      trustBadge: 'Google Verified User',
-      walletBalance: 250
-    };
-
-    dispatch(setCredentials({ user: googleLoggedInUser, token: `jwt_google_${Date.now()}` }));
-    setToast({ message: `✅ Signed in as ${userPayload.name} (${userPayload.email})`, type: 'success' });
-    setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 600);
-    setLoading(false);
   };
 
   const handleRegister = async (e) => {
@@ -97,48 +79,17 @@ export default function RegisterPage() {
 
     try {
       const res = await API.post('/auth/register', payload);
-      if (res.data && (res.data.success || res.data.user)) {
-        const userData = res.data.user || {
-          _id: `user_${Date.now()}`,
-          name,
-          email,
-          phone,
-          role,
-          gender,
-          organizationName,
-          isAadhaarVerified: false,
-          isLicenseVerified: false,
-          trustScore: 80,
-          trustBadge: 'New Member',
-          walletBalance: 0
-        };
-        dispatch(setCredentials({ user: userData, token: res.data.token || 'jwt_token_2026' }));
-        setToast({ message: 'Account created! Please verify identity to offer rides.', type: 'success' });
+      if (res.data && res.data.success) {
+        dispatch(setCredentials({ user: res.data.user, token: res.data.token }));
+        setToast({ message: 'Account created! Opening portal...', type: 'success' });
         setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 800);
         return;
       }
     } catch (err) {
-      console.log('[Register Notice]: Session registered');
+      setToast({ message: err.response?.data?.message || 'Registration failed. User may already exist.', type: 'error' });
+    } finally {
+      setLoading(false);
     }
-
-    const fallbackUser = {
-      _id: `user_${Date.now()}`,
-      name,
-      email,
-      phone: phone || '',
-      role,
-      gender,
-      organizationName: organizationName || 'Sri Eshwar College of Engineering',
-      isAadhaarVerified: false,
-      isLicenseVerified: false,
-      trustScore: 80,
-      trustBadge: 'New Member',
-      walletBalance: 0
-    };
-    dispatch(setCredentials({ user: fallbackUser, token: 'jwt_token_2026' }));
-    setToast({ message: 'Account created! Please verify identity to offer rides.', type: 'success' });
-    setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 800);
-    setLoading(false);
   };
 
   return (

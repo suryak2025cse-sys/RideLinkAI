@@ -10,7 +10,6 @@ import { signInWithGoogleFirebase } from '../services/firebase';
 export default function LoginPage() {
   const [role, setRole] = useState('Passenger');
 
-  // Form inputs start COMPLETELY EMPTY - No pre-filled strings
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -74,27 +73,10 @@ export default function LoginPage() {
         return;
       }
     } catch (err) {
-      console.log('[Google Auth Notice]: Local session authenticated');
+      setToast({ message: err.response?.data?.message || 'Google Authentication failed.', type: 'error' });
+    } finally {
+      setLoading(false);
     }
-
-    const googleLoggedInUser = {
-      _id: `google_user_${selectedGoogleUser.uid || Date.now()}`,
-      name: userPayload.name,
-      email: userPayload.email,
-      phone: '',
-      role,
-      profilePicture: userPayload.picture,
-      isAadhaarVerified: false,
-      isLicenseVerified: false,
-      trustScore: 90,
-      trustBadge: 'Google Verified User',
-      walletBalance: 250
-    };
-
-    dispatch(setCredentials({ user: googleLoggedInUser, token: `jwt_google_${Date.now()}` }));
-    setToast({ message: `✅ Signed in as ${userPayload.name} (${userPayload.email})`, type: 'success' });
-    setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 600);
-    setLoading(false);
   };
 
   const handleLogin = async (e) => {
@@ -120,29 +102,10 @@ export default function LoginPage() {
         return;
       }
     } catch (err) {
-      console.log('[Login Notice]: Authenticating session');
+      setToast({ message: err.response?.data?.message || 'Invalid email or password. Please try again.', type: 'error' });
+    } finally {
+      setLoading(false);
     }
-
-    const loggedInUser = {
-      _id: `user_${Date.now()}`,
-      name: email.split('@')[0].toUpperCase(),
-      email,
-      phone: '',
-      role,
-      gender: 'Male',
-      organizationName: 'Sri Eshwar College of Engineering',
-      isAadhaarVerified: false,
-      isLicenseVerified: false,
-      emergencyContactName: 'Rajesh K',
-      emergencyContactPhone: '9876543210',
-      trustScore: 80,
-      trustBadge: 'New Member',
-      walletBalance: 0
-    };
-    dispatch(setCredentials({ user: loggedInUser, token: 'jwt_auth_token_2026' }));
-    setToast({ message: 'Login successful! Opening application...', type: 'success' });
-    setTimeout(() => navigate(role === 'Driver' ? '/driver' : '/passenger'), 600);
-    setLoading(false);
   };
 
   return (
@@ -164,7 +127,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Role Selector Tabs - Passenger and Driver ONLY */}
+        {/* Role Selector Tabs */}
         <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 text-xs font-black">
           {['Passenger', 'Driver'].map((r) => (
             <button

@@ -15,14 +15,14 @@ const getBaseURL = () => {
 
 const API = axios.create({
   baseURL: getBaseURL(),
-  timeout: 6000, // 6-second strict HTTP timeout to prevent stuck loading buttons
+  timeout: 8000,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   if (token && token !== 'null' && token !== 'undefined' && !token.startsWith('mock_')) {
     config.headers.Authorization = `Bearer ${token}`;
   }
