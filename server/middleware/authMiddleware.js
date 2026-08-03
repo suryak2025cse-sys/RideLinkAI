@@ -12,7 +12,6 @@ const protect = async (req, res, next) => {
     
     if (token && token !== 'null' && token !== 'undefined') {
       try {
-        // Try verifying with primary secret or legacy fallback secret
         let decoded;
         try {
           decoded = jwt.verify(token, JWT_SECRET);
@@ -21,7 +20,7 @@ const protect = async (req, res, next) => {
         }
 
         if (decoded && decoded.id) {
-          if (mongoose.connection.readyState === 1) {
+          if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(decoded.id)) {
             req.user = await User.findById(decoded.id).select('-password').catch(() => null);
           }
 
@@ -37,23 +36,12 @@ const protect = async (req, res, next) => {
           return next();
         }
       } catch (error) {
-        console.log('[Auth Guard Warning]: Invalid or expired token presented, attempting fallback authorization', error.message);
+        console.log('[Auth Guard Warning]: Invalid or expired token presented:', error.message);
       }
     }
   }
 
-  // Fallback authorization check if request contains valid body user details
-  if (req.body && (req.body.driverId || req.body.passengerId || req.body.userId)) {
-    req.user = {
-      _id: req.body.driverId || req.body.passengerId || req.body.userId,
-      name: req.body.driverDetails?.name || req.body.passengerDetails?.name || 'Community User',
-      email: 'user@ridelink.ai',
-      role: 'Passenger'
-    };
-    return next();
-  }
-
-  return res.status(401).json({ success: false, message: 'Authentication required. Please log in.' });
+  return res.status(401).json({ success: false, message: 'Authentication required. Please log in with a valid token.' });
 };
 
 const authorize = (...roles) => {

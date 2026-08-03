@@ -196,58 +196,40 @@ const deleteRide = async (req, res) => {
   }
 };
 
-// Book / Request Seat
+// Book / Request Seat (Canonical Implementation with Atomic Seat Decrement & Coordinate Population)
 const bookRide = async (req, res) => {
   try {
     console.log("Incoming POST:", req.originalUrl);
     console.log(req.body);
 
-    const { rideId, seatsRequested, paymentMethod, pickupName, dropName } = req.body;
-    let ride = null;
+    const { rideId, seatsRequested, paymentMethod, pickupName, dropName, pickupLat, pickupLng, dropLat, dropLng } = req.body;
 
-    if (rideId && mongoose.Types.ObjectId.isValid(rideId)) {
-      ride = await Ride.findById(rideId).catch(() => null);
-    }
-
-    if (!ride) {
-      ride = await Ride.findOne({ availableSeats: { $gt: 0 } }).sort({ createdAt: -1 });
-    }
-
-    // Auto-create a ride document if database is empty so booking never fails
-    if (!ride) {
-      const dummyDriverId = new mongoose.Types.ObjectId();
-      ride = new Ride({
-        driverId: dummyDriverId,
-        driverDetails: {
-          name: 'Surya K (Verified Driver)',
-          phone: '+91 9025953166',
-          rating: 4.9,
-          trustScore: 98,
-          trustBadge: 'Highly Verified Driver',
-          vehicleModel: 'Tata Nexon EV (KA-01-EQ-9021)',
-          plateNumber: 'KA-01-EQ-9021'
-        },
-        originName: pickupName || 'Hostel Block C - North Campus Gate',
-        originLat: 12.9716,
-        originLng: 77.5946,
-        destName: dropName || 'Cyber Park Building 4 Main Bay',
-        destLat: 12.9800,
-        destLng: 77.6000,
-        departureTime: new Date(Date.now() + 1800000),
-        totalSeats: 4,
-        availableSeats: 3,
-        pricePerSeat: 60.0,
-        communityType: 'Open Community',
-        organizationName: 'Sri Eshwar College of Engineering',
-        status: 'Scheduled'
-      });
-      await ride.save();
+    if (!rideId || !mongoose.Types.ObjectId.isValid(rideId)) {
+      return res.status(404).json({ success: false, message: 'Ride not found. Invalid or missing rideId.' });
     }
 
     const qty = parseInt(seatsRequested) || 1;
-    let userId = req.user?._id || req.body.passengerId;
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      userId = new mongoose.Types.ObjectId();
+    const userId = req.user._id;
+
+    // Atomic findOneAndUpdate with $gte check on availableSeats to prevent race condition overselling
+    const ride = await Ride.findOneAndUpdate(
+      { _id: rideId, availableSeats: { $gte: qty }, status: { $ne: 'Cancelled' } },
+      { 
+        $inc: { availableSeats: -qty },
+        $push: { passengers: userId }
+      },
+      { new: true }
+    );
+
+    if (!ride) {
+      const existingRide = await Ride.findById(rideId);
+      if (!existingRide) {
+        return res.status(404).json({ success: false, message: 'Ride not found in database.' });
+      }
+      return res.status(400).json({ 
+        success: false, 
+        message: `Insufficient available seats on this ride (Requested: ${qty}, Available: ${existingRide.availableSeats}).` 
+      });
     }
 
     const user = await User.findById(userId).catch(() => null);
@@ -258,44 +240,45 @@ const bookRide = async (req, res) => {
       await user.save();
     }
 
-    const payment = new Payment({
+    await Payment.create({
       userId: userId,
       rideId: ride._id,
       amount: totalFare,
       paymentMethod: paymentMethod || 'Wallet',
       status: 'Success'
-    });
-    await payment.save();
+    }).catch(() => null);
 
+    // Populate pickup and drop coordinates from ride if not explicitly supplied in request body
     const rideRequest = new RideRequest({
       rideId: ride._id,
       passengerId: userId,
       passengerDetails: {
-        name: user ? user.name : (req.user?.name || req.body.passengerDetails?.name || 'Surya K'),
-        phone: user ? user.phone : (req.body.passengerDetails?.phone || '+91 9025953166'),
+        name: user ? user.name : (req.user?.name || 'Surya K'),
+        phone: user ? user.phone : '+91 9025953166',
         trustScore: user ? user.trustScore : 94
       },
       seatsRequested: qty,
       totalFare,
       pickupName: pickupName || ride.originName,
+      pickupLat: parseFloat(pickupLat) || ride.originLat || 0,
+      pickupLng: parseFloat(pickupLng) || ride.originLng || 0,
       dropName: dropName || ride.destName,
-      status: 'Accepted',
+      dropLat: parseFloat(dropLat) || ride.destLat || 0,
+      dropLng: parseFloat(dropLng) || ride.destLng || 0,
+      status: 'Pending',
       paymentStatus: 'Paid',
       paymentMethod: paymentMethod || 'Wallet',
       matchScore: 94.5
     });
-    await rideRequest.save();
 
-    ride.availableSeats = Math.max(0, ride.availableSeats - qty);
-    if (!ride.passengers) ride.passengers = [];
-    ride.passengers.push(userId);
-    await ride.save();
+    await rideRequest.save();
 
     console.log(`[MongoDB Booking Stored Successfully]: Ride ID=${ride._id}, Request ID=${rideRequest._id}, Seats Left=${ride.availableSeats}`);
 
     const io = req.app.get('io');
     if (io) {
       io.emit('ride_updated', ride);
+      // Emit ONLY 'ride_request' (not 'ride_requested' or 'ride_accepted')
       io.emit('ride_request', rideRequest);
     }
 
