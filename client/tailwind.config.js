@@ -8,8 +8,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        rapidoYellow: '#FACC15',
-        rapidoYellowDark: '#EAB308',
+        rapidoYellow: '#1fc122',
+        rapidoYellowDark: '#045f0f',
         rapidoBlack: '#0F172A',
         rapidoBg: '#F8FAFC',
       },
