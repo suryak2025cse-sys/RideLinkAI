@@ -71,7 +71,7 @@ const runTest = async () => {
     // 4. Driver
     const testDriver = await Driver.create({
       userId: testUser._id,
-      licenseNumber: 'DL-TEST-12345',
+      licenseNumber: 'DL-TEST-' + Date.now(),
       status: 'Approved'
     });
     console.log('✅ 4. Driver collection stored ID:', testDriver._id);
@@ -81,7 +81,7 @@ const runTest = async () => {
       driverId: testDriver._id,
       make: 'Tata',
       model: 'Nexon EV',
-      plateNumber: 'KA-01-TEST-99'
+      plateNumber: 'KA-01-TEST-' + Math.floor(1000 + Math.random() * 9000)
     });
     console.log('✅ 5. Vehicle collection stored ID:', testVehicle._id);
 
