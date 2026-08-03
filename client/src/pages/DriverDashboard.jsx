@@ -24,7 +24,7 @@ export default function DriverDashboard() {
   const [departureTime, setDepartureTime] = useState('09:30 AM');
   const [phone, setPhone] = useState(user?.phone || '9025953166');
   const [totalSeats, setTotalSeats] = useState(3);
-  const [pricePerSeat, setPricePerSeat] = useState(0);
+  const [pricePerSeat, setPricePerSeat] = useState(60);
   const [isWomenOnly, setIsWomenOnly] = useState(false);
   const [communityType, setCommunityType] = useState('Open Community');
   
@@ -67,8 +67,7 @@ export default function DriverDashboard() {
     setLoading(true);
     setToast(null);
 
-    const rideData = {
-      _id: `ride_${Date.now()}`,
+    const ridePayload = {
       driverDetails: {
         name: user?.name || 'Surya K',
         phone: phone || user?.phone || '+91 9025953166',
@@ -87,16 +86,16 @@ export default function DriverDashboard() {
       departureTime: departureTime || '09:30 AM',
       totalSeats: parseInt(totalSeats) || 3,
       availableSeats: parseInt(totalSeats) || 3,
-      pricePerSeat: parseFloat(pricePerSeat) || 0,
+      pricePerSeat: parseFloat(pricePerSeat) || 60.0,
       communityType: communityType || 'Open Community',
+      organizationName: user?.organizationName || 'Sri Eshwar College of Engineering',
       isWomenOnly: !!isWomenOnly,
-      status: 'Scheduled',
-      matchScore: 98.5
+      status: 'Scheduled'
     };
 
     try {
-      const res = await API.post('/rides/offer', rideData);
-      const createdRide = (res.data && res.data.ride) ? res.data.ride : rideData;
+      const res = await API.post('/rides/offer', ridePayload);
+      const createdRide = (res.data && res.data.ride) ? res.data.ride : ridePayload;
       
       dispatch(addOfferedRide(createdRide));
 
@@ -105,17 +104,11 @@ export default function DriverDashboard() {
       localStorage.setItem('local_offered_rides', JSON.stringify(updated));
 
       setLoading(false);
-      setToast({ message: '✅ Verified Ride published & saved to DB!', type: 'success' });
+      setToast({ message: '✅ Verified Ride published & saved to MongoDB Atlas!', type: 'success' });
       setTimeout(() => navigate('/passenger'), 800);
     } catch (err) {
-      dispatch(addOfferedRide(rideData));
-      const updated = [rideData, ...offeredRides];
-      setOfferedRides(updated);
-      localStorage.setItem('local_offered_rides', JSON.stringify(updated));
-
+      setToast({ message: err.response?.data?.message || 'Failed to offer ride. Please check network connection.', type: 'error' });
       setLoading(false);
-      setToast({ message: '✅ Verified Ride published to community network!', type: 'success' });
-      setTimeout(() => navigate('/passenger'), 800);
     }
   };
 

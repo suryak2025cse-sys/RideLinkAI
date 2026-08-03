@@ -10,6 +10,7 @@ import ToastNotification from '../components/ToastNotification';
 import VoiceCommandHandler from '../components/VoiceCommandHandler';
 import API from '../services/api';
 import { updateUser } from '../redux/authSlice';
+import { socket } from '../services/socket';
 
 export default function PassengerDashboard() {
   const dispatch = useDispatch();
@@ -48,19 +49,8 @@ export default function PassengerDashboard() {
 
       let fetchedRides = (res.data && res.data.recommendations) ? res.data.recommendations : [];
 
-      let localRides = [];
-      try {
-        localRides = JSON.parse(localStorage.getItem('local_offered_rides')) || [];
-        if (!Array.isArray(localRides)) localRides = [];
-      } catch (e) {
-        localRides = [];
-      }
-
-      const combined = [...localRides, ...fetchedRides];
-      const uniqueRides = Array.from(new Map(combined.map(r => [r._id || Math.random(), r])).values());
-      
       // Filter by Organization if Campus Mode or Corporate Mode is active
-      const filteredByOrg = uniqueRides.filter(r => {
+      const filteredByOrg = fetchedRides.filter(r => {
         if (communityFilter === 'Campus Mode' || communityFilter === 'Corporate Mode') {
           return r.organizationName ? r.organizationName.toLowerCase().includes(selectedOrganization.toLowerCase()) : true;
         }
@@ -69,14 +59,7 @@ export default function PassengerDashboard() {
 
       setRides(filteredByOrg);
     } catch (err) {
-      let localRides = [];
-      try {
-        localRides = JSON.parse(localStorage.getItem('local_offered_rides')) || [];
-        if (!Array.isArray(localRides)) localRides = [];
-      } catch (e) {
-        localRides = [];
-      }
-      setRides(localRides);
+      console.log('[Fetch Rides Warning]:', err.message);
     } finally {
       setLoading(false);
     }
@@ -85,11 +68,34 @@ export default function PassengerDashboard() {
   useEffect(() => {
     fetchRides();
 
+    // Live real-time socket listeners for instant multi-user synchronization
+    if (socket) {
+      socket.on('ride_created', (newRide) => {
+        setRides(prev => [newRide, ...prev.filter(r => r._id !== newRide._id)]);
+        setToast({ message: '⚡ New live community ride offered nearby!', type: 'info' });
+      });
+
+      socket.on('ride_updated', (updatedRide) => {
+        setRides(prev => prev.map(r => r._id === updatedRide._id ? { ...r, ...updatedRide } : r));
+      });
+
+      socket.on('ride_deleted', (deletedRideId) => {
+        setRides(prev => prev.filter(r => r._id !== deletedRideId));
+      });
+    }
+
     const interval = setInterval(() => {
       fetchRides();
     }, 4000);
 
-    return () => clearInterval(interval);
+    return () => {
+      if (socket) {
+        socket.off('ride_created');
+        socket.off('ride_updated');
+        socket.off('ride_deleted');
+      }
+      clearInterval(interval);
+    };
   }, [womenOnlyFilter, communityFilter, selectedOrganization]);
 
   const handleSearchSubmit = (e) => {
@@ -148,8 +154,7 @@ export default function PassengerDashboard() {
         setTimeout(() => navigate('/tracking'), 1000);
       }
     } catch (err) {
-      setToast({ message: '✅ Ride Booked successfully! Redirecting to tracking...', type: 'success' });
-      setTimeout(() => navigate('/tracking'), 1000);
+      setToast({ message: err.response?.data?.message || 'Failed to book ride. Please check network connection.', type: 'error' });
     } finally {
       setBookingRideId(null);
     }
@@ -346,11 +351,11 @@ export default function PassengerDashboard() {
       {/* Main Map & Recommendations Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* Left Column: Interactive Map */}
+        {/* Left Column: OpenStreetMap Live Radar Map */}
         <div className="lg:col-span-5 space-y-4">
           <div className="app-card p-4 rounded-3xl space-y-3 bg-white border border-slate-200">
             <div className="flex items-center justify-between px-2">
-              <h3 className="font-extrabold text-base text-slate-900">Live Driver Radar Map</h3>
+              <h3 className="font-extrabold text-base text-slate-900">Live Driver OpenStreetMap Radar</h3>
               <span className="text-xs font-black text-emerald-700 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full">
                 ● Live GPS Active
               </span>
@@ -381,8 +386,8 @@ export default function PassengerDashboard() {
             </div>
           ) : rides.length === 0 ? (
             <EmptyState
-              title="No Rides Found for Selected Organization"
-              description={`No active rides listed under ${selectedOrganization} right now. Try switching community modes or offer a ride!`}
+              title="No Active Rides Listed Right Now"
+              description="No active rides matching your search criteria. Offer a ride in Driver Portal or refresh live matches!"
               icon={Search}
               actionLabel="Refresh Live Matches"
               onAction={fetchRides}
