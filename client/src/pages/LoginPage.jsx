@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Mail, Lock, LogIn, Car, ShieldAlert, AlertCircle } from 'lucide-react';
+import { Mail, Lock, LogIn, Car, AlertCircle } from 'lucide-react';
 import { setCredentials } from '../redux/authSlice';
 import API from '../services/api';
 import ToastNotification from '../components/ToastNotification';
@@ -108,29 +108,6 @@ export default function LoginPage() {
     setLoading(true);
     setToast(null);
 
-    if (role === 'Admin' || email === 'CodeShift@gmail.com') {
-      if (email === 'CodeShift@gmail.com' && password === 'CodeShift18') {
-        const adminUser = {
-          _id: 'admin_codeshift_2026',
-          name: 'CodeShift Admin',
-          email: 'CodeShift@gmail.com',
-          role: 'Admin',
-          trustScore: 100,
-          trustBadge: 'Platform Super Admin',
-          walletBalance: 0
-        };
-        dispatch(setCredentials({ user: adminUser, token: 'jwt_admin_token_codeshift_2026' }));
-        setToast({ message: '✅ Admin authenticated! Opening Admin Portal...', type: 'success' });
-        setTimeout(() => navigate('/admin'), 600);
-        setLoading(false);
-        return;
-      } else {
-        setToast({ message: 'Invalid Admin Credentials. Use CodeShift@gmail.com / CodeShift18', type: 'error' });
-        setLoading(false);
-        return;
-      }
-    }
-
     try {
       const res = await API.post('/auth/login', { email, password });
       if (res.data && res.data.success) {
@@ -187,9 +164,9 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Role Selector Tabs */}
-        <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 text-xs font-black">
-          {['Passenger', 'Driver', 'Admin'].map((r) => (
+        {/* Role Selector Tabs - Passenger and Driver ONLY */}
+        <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 text-xs font-black">
+          {['Passenger', 'Driver'].map((r) => (
             <button
               key={r}
               type="button"
@@ -241,13 +218,6 @@ export default function LoginPage() {
           <span className="px-3">or email</span>
           <div className="flex-1 border-t border-slate-200"></div>
         </div>
-
-        {role === 'Admin' && (
-          <div className="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-xs font-bold text-amber-900 flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>Admin Access: CodeShift@gmail.com / CodeShift18</span>
-          </div>
-        )}
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
