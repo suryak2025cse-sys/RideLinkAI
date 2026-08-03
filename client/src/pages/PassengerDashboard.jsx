@@ -217,7 +217,7 @@ export default function PassengerDashboard() {
 
               <button
                 type="submit"
-                className="btn-primary w-full py-4 text-lg font-black shadow-rapido-yellow text-slate-950"
+                className="btn-primary w-full py-4 text-lg font-black shadow-rapido-yellow text-white"
               >
                 Save Emergency Details & Confirm Booking
               </button>
@@ -233,7 +233,7 @@ export default function PassengerDashboard() {
         <div className="lg:col-span-7 space-y-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="bg-amber-100 text-slate-950 font-black px-3.5 py-1 rounded-full text-xs border border-amber-300">
+              <span className="bg-emerald-100 text-emerald-950 font-black px-3.5 py-1 rounded-full text-xs border border-emerald-300">
                 ⚡ SMART AI COMMUNITY MOBILITY
               </span>
               <VoiceCommandHandler />
@@ -276,7 +276,7 @@ export default function PassengerDashboard() {
 
               <button 
                 type="submit" 
-                className="btn-primary w-full py-4 text-xl font-black shadow-rapido-yellow text-slate-950 rounded-2xl flex items-center justify-center gap-2"
+                className="btn-primary w-full py-4 text-xl font-black shadow-rapido-yellow text-white rounded-2xl flex items-center justify-center gap-2"
               >
                 <span>Book Ride</span>
                 <ArrowRight className="w-6 h-6" />
@@ -287,8 +287,8 @@ export default function PassengerDashboard() {
 
         {/* Right Hero Illustration Card */}
         <div className="lg:col-span-5 hidden lg:block">
-          <div className="bg-gradient-to-tr from-amber-100 via-amber-50 to-blue-50 p-8 rounded-4xl border border-amber-200 shadow-sm relative overflow-hidden text-center space-y-4">
-            <div className="w-20 h-20 bg-amber-400 text-slate-950 rounded-3xl flex items-center justify-center mx-auto shadow-md">
+          <div className="bg-gradient-to-tr from-emerald-100 via-emerald-50 to-teal-50 p-8 rounded-4xl border border-emerald-200 shadow-sm relative overflow-hidden text-center space-y-4">
+            <div className="w-20 h-20 bg-emerald-500 text-white rounded-3xl flex items-center justify-center mx-auto shadow-md">
               <Car className="w-10 h-10" />
             </div>
             <h3 className="text-2xl font-black text-slate-900">AI Ride-Pooling Active</h3>
@@ -305,7 +305,7 @@ export default function PassengerDashboard() {
         
         {/* Organization Filter Selector */}
         <div className="flex items-center gap-3">
-          <Building className="w-5 h-5 text-amber-500 shrink-0" />
+          <Building className="w-5 h-5 text-emerald-600 shrink-0" />
           <span className="font-extrabold text-slate-900 whitespace-nowrap">Organization Filter:</span>
           <select
             value={selectedOrganization}
@@ -374,7 +374,7 @@ export default function PassengerDashboard() {
               onClick={() => { setLoading(true); fetchRides(); }}
               className="text-xs font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-full"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-amber-500' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-500' : ''}`} />
               <span>Refresh Rides</span>
             </button>
           </div>

@@ -116,8 +116,8 @@ export default function LoginPage() {
         
         {/* Brand Logo Header */}
         <div className="text-center space-y-3">
-          <div className="bg-amber-400 text-slate-950 font-black px-6 py-2.5 rounded-full text-2xl tracking-tight shadow-sm inline-flex items-center gap-2 border border-amber-300 mx-auto">
-            <Car className="w-6 h-6 text-slate-950" />
+          <div className="bg-emerald-500 text-white font-black px-6 py-2.5 rounded-full text-2xl tracking-tight shadow-sm inline-flex items-center gap-2 border border-emerald-400 mx-auto">
+            <Car className="w-6 h-6 text-white" />
             <span>ridelink</span>
           </div>
 
@@ -147,13 +147,13 @@ export default function LoginPage() {
 
         {/* Firebase Domain Unauthorized Guide Banner */}
         {domainError && (
-          <div className="bg-amber-50 border border-amber-300 p-4 rounded-2xl text-xs font-semibold text-slate-800 space-y-2">
-            <div className="flex items-center gap-2 font-bold text-amber-900">
-              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+          <div className="bg-emerald-50 border border-emerald-300 p-4 rounded-2xl text-xs font-semibold text-slate-800 space-y-2">
+            <div className="flex items-center gap-2 font-bold text-emerald-900">
+              <AlertCircle className="w-5 h-5 text-emerald-600 shrink-0" />
               <span>Firebase Domain Setup Instructions (30 Secs)</span>
             </div>
             <p className="text-[11px] leading-relaxed text-slate-600">
-              1. Open <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="underline font-bold text-slate-900">Firebase Console</a> &rarr; <b>ridelinkai-c0199</b><br/>
+              1. Open <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="underline font-bold text-slate-900">Firebase Console</a> &rrarr; <b>ridelinkai-c0199</b><br/>
               2. Go to <b>Authentication</b> &rarr; <b>Settings</b> &rarr; <b>Authorized domains</b><br/>
               3. Click <b>Add domain</b> and add: <code className="bg-slate-200 px-1 py-0.5 rounded font-bold">{window.location.hostname}</code>
             </p>
@@ -216,16 +216,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full py-4 text-lg font-black shadow-rapido-yellow flex items-center justify-center gap-2 mt-2"
+            className="btn-primary w-full py-4 text-lg font-black shadow-rapido-yellow flex items-center justify-center gap-2 mt-2 text-white"
           >
-            <LogIn className="w-5 h-5 text-slate-950" />
+            <LogIn className="w-5 h-5 text-white" />
             <span>{loading ? 'Authenticating...' : `Sign In as ${role}`}</span>
           </button>
         </form>
 
         <div className="text-center text-sm font-bold text-slate-600 pt-2 border-t border-slate-100">
           Don't have an account?{' '}
-          <Link to="/register" className="text-slate-950 font-extrabold underline hover:text-amber-600">
+          <Link to="/register" className="text-emerald-600 font-extrabold underline hover:text-emerald-700">
             Create Account
           </Link>
         </div>

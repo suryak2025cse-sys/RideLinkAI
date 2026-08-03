@@ -25,8 +25,8 @@ export default function MatchCard({ ride, match, onBook, onBookRide, booking }) 
       {/* Top AI Match Badge & Price */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="bg-amber-100 border border-amber-300 text-slate-950 font-black text-xs px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+          <span className="bg-emerald-100 border border-emerald-300 text-emerald-950 font-black text-xs px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
             {badge} ({score}%)
           </span>
           {activeRide.isWomenOnly && (
@@ -53,11 +53,11 @@ export default function MatchCard({ ride, match, onBook, onBookRide, booking }) 
           <div>
             <div className="flex items-center gap-1.5">
               <h4 className="font-extrabold text-slate-900 text-base">{driver.name || 'Surya K'}</h4>
-              <CheckCircle2 className="w-4 h-4 text-amber-500 fill-amber-400" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 fill-emerald-500" />
             </div>
             <div className="flex items-center gap-3 text-sm text-slate-600 mt-0.5 font-semibold">
-              <span className="flex items-center gap-1 text-amber-600 font-black">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400" /> {driver.rating || 4.9}
+              <span className="flex items-center gap-1 text-emerald-700 font-black">
+                <Star className="w-4 h-4 fill-emerald-500 text-emerald-500" /> {driver.rating || 4.9}
               </span>
               <span className="flex items-center gap-1 text-emerald-700 font-bold">
                 <ShieldCheck className="w-4 h-4" /> Trust {driver.trustScore || 96}/100
@@ -75,7 +75,7 @@ export default function MatchCard({ ride, match, onBook, onBookRide, booking }) 
           className="bg-slate-100 hover:bg-slate-200 text-slate-900 font-extrabold px-3.5 py-2.5 rounded-2xl text-xs flex items-center gap-1.5 border border-slate-200 shadow-sm"
           title="Open Driver Chat"
         >
-          <MessageSquare className="w-4 h-4 text-amber-600" />
+          <MessageSquare className="w-4 h-4 text-emerald-600" />
           <span>Chat Driver</span>
         </button>
       </div>
@@ -102,7 +102,7 @@ export default function MatchCard({ ride, match, onBook, onBookRide, booking }) 
       <div className="flex items-center justify-between pt-2 border-t border-slate-100">
         <div className="flex items-center gap-4 text-sm text-slate-700 font-bold">
           <span className="flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-amber-600" /> {activeRide.departureTime || '09:30 AM'}
+            <Clock className="w-4 h-4 text-emerald-600" /> {activeRide.departureTime || '09:30 AM'}
           </span>
           <span className="flex items-center gap-1.5">
             <Users className="w-4 h-4 text-emerald-600" /> {activeRide.availableSeats ?? 3} seats left
@@ -115,7 +115,7 @@ export default function MatchCard({ ride, match, onBook, onBookRide, booking }) 
             handleOpenChat();
           }}
           disabled={booking}
-          className="btn-primary py-2.5 px-5 text-sm shadow-rapido-yellow text-slate-950 font-black rounded-2xl"
+          className="btn-primary py-2.5 px-5 text-sm shadow-rapido-yellow text-white font-black rounded-2xl"
         >
           <span>{booking ? 'Booking...' : 'Book Ride & Chat'}</span>
           <ArrowRight className="w-4 h-4" />

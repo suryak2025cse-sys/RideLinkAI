@@ -8,8 +8,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        rapidoYellow: '#1fc122',
-        rapidoYellowDark: '#045f0f',
+        rapidoYellow: '#10B981',
+        rapidoYellowDark: '#059669',
         rapidoBlack: '#0F172A',
         rapidoBg: '#F8FAFC',
       },
@@ -23,7 +23,7 @@ export default {
       },
       boxShadow: {
         'rapido-card': '0 4px 20px -2px rgba(15, 23, 42, 0.06)',
-        'rapido-yellow': '0 8px 25px -5px rgba(250, 204, 21, 0.4)',
+        'rapido-yellow': '0 8px 25px -5px rgba(16, 185, 129, 0.4)',
       }
     },
   },

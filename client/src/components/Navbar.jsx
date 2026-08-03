@@ -23,10 +23,10 @@ export default function Navbar() {
     <nav className="sticky top-0 z-40 bg-white border-b border-slate-200 px-4 lg:px-8 py-3.5 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
-        {/* Brand Logo - Rapido Pill Style */}
+        {/* Brand Logo - Vibrant Green Pill Style */}
         <Link to={isAdmin ? '/admin' : (user?.role === 'Driver' ? '/driver' : '/passenger')} className="flex items-center gap-3 group">
-          <div className="bg-amber-400 text-slate-950 font-black px-5 py-2 rounded-full text-xl tracking-tight shadow-sm flex items-center gap-2 border border-amber-300 group-hover:scale-105 transition-transform">
-            <Car className="w-5 h-5 text-slate-950" />
+          <div className="bg-emerald-500 text-white font-black px-5 py-2 rounded-full text-xl tracking-tight shadow-sm flex items-center gap-2 border border-emerald-400 group-hover:scale-105 transition-transform">
+            <Car className="w-5 h-5 text-white" />
             <span>ridelink</span>
           </div>
           <span className="text-xs font-black bg-slate-950 text-white px-2.5 py-1 rounded-full uppercase tracking-wider hidden sm:inline">
@@ -34,7 +34,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Navigation Links - Rapido Underline Style */}
+        {/* Navigation Links */}
         {isAuthenticated ? (
           <div className="hidden md:flex items-center gap-8 text-base font-bold text-slate-700">
             {!isAdmin && (
@@ -119,8 +119,8 @@ export default function Navbar() {
               </button>
 
               {/* Wallet Pill */}
-              <div className="hidden sm:flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3.5 py-1.5 rounded-full text-sm font-black text-slate-950">
-                <Wallet className="w-4 h-4 text-amber-600" />
+              <div className="hidden sm:flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-full text-sm font-black text-slate-950">
+                <Wallet className="w-4 h-4 text-emerald-600" />
                 <span>₹{user?.walletBalance ? user.walletBalance.toFixed(0) : '0'}</span>
               </div>
 
@@ -133,7 +133,7 @@ export default function Navbar() {
                   <img
                     src={user?.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
                     alt="User"
-                    className="w-6 h-6 rounded-full object-cover border border-amber-400"
+                    className="w-6 h-6 rounded-full object-cover border border-emerald-400"
                   />
                   <span className="hidden sm:inline">{user?.name || 'Account'}</span>
                   <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -147,7 +147,7 @@ export default function Navbar() {
                     </div>
 
                     <div className="border-t border-slate-100 pt-1">
-                      <Link to="/profile" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-amber-50 font-bold">
+                      <Link to="/profile" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-emerald-50 font-bold">
                         Profile & Verifications
                       </Link>
                       <button
