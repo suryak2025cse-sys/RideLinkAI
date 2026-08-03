@@ -15,4 +15,4 @@ const sosSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('SOS', sosSchema);
+module.exports = mongoose.model('SOS', sosSchema, 'sos');

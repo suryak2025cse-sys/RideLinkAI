@@ -5,6 +5,9 @@ const User = require('../models/User');
 
 const createBooking = async (req, res) => {
   try {
+    console.log("Incoming POST:", req.originalUrl);
+    console.log(req.body);
+
     const { rideId, seatsRequested, paymentMethod, pickupName, dropName } = req.body;
     let ride = await Ride.findById(rideId);
 
@@ -21,16 +24,16 @@ const createBooking = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Insufficient available seats.' });
     }
 
-    const userId = req.user?._id || new mongoose.Types.ObjectId();
-    const user = mongoose.connection.readyState === 1 ? await User.findById(userId) : null;
+    const userId = req.user?._id || req.body.passengerId || new mongoose.Types.ObjectId();
+    const user = await User.findById(userId).catch(() => null);
     const totalFare = ride.pricePerSeat * qty;
 
-    const booking = await RideRequest.create({
+    const booking = new RideRequest({
       rideId: ride._id,
       passengerId: userId,
       passengerDetails: {
-        name: user ? user.name : (req.user?.name || 'Surya K'),
-        phone: user ? user.phone : '+91 9025953166',
+        name: user ? user.name : (req.user?.name || req.body.passengerDetails?.name || 'Surya K'),
+        phone: user ? user.phone : (req.body.passengerDetails?.phone || '+91 9025953166'),
         trustScore: user ? user.trustScore : 94
       },
       seatsRequested: qty,
@@ -42,6 +45,8 @@ const createBooking = async (req, res) => {
       paymentMethod: paymentMethod || 'Wallet',
       matchScore: 94.5
     });
+
+    await booking.save();
 
     ride.availableSeats = Math.max(0, ride.availableSeats - qty);
     if (!ride.passengers) ride.passengers = [];
@@ -57,19 +62,20 @@ const createBooking = async (req, res) => {
 
     res.status(201).json({ success: true, booking, remainingSeats: ride.availableSeats });
   } catch (error) {
+    console.error('[Create Booking Error]:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
 const updateBookingStatus = async (req, res) => {
   try {
+    console.log("Incoming PATCH:", req.originalUrl);
+    console.log(req.body);
+
     const { id } = req.params;
     const { status } = req.body;
 
-    let booking = null;
-    if (mongoose.connection.readyState === 1) {
-      booking = await RideRequest.findByIdAndUpdate(id, { status }, { new: true });
-    }
+    const booking = await RideRequest.findByIdAndUpdate(id, { status }, { new: true });
 
     const io = req.app.get('io');
     if (io) {

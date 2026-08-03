@@ -38,7 +38,7 @@ const io = new Server(server, {
 // Attach Socket.io instance to Express App
 app.set('io', io);
 
-// Middleware - Dynamic CORS reflection for credentials compatibility
+// Middleware - Must be placed BEFORE routes
 app.use(cors({
   origin: (origin, callback) => callback(null, true),
   credentials: true,
@@ -65,6 +65,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/communities', communityRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use('/api/review', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 

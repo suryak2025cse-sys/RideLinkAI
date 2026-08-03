@@ -5,15 +5,22 @@ const Notification = require('../models/Notification');
 // Trigger SOS Emergency
 const triggerSOS = async (req, res) => {
   try {
+    console.log("Incoming POST:", req.originalUrl);
+    console.log(req.body);
+
     const { rideId, lat, lng, addressName, triggerReason } = req.body;
-    const userId = req.user._id;
+    const userId = req.user?._id || req.body.userId;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'userId is required for SOS trigger.' });
+    }
 
     const user = await User.findById(userId);
-    const emergencyContacts = user ? user.emergencyContacts : [
-      { name: 'Parent / Guardian', phone: '+91 9988776655' }
+    const emergencyContacts = user?.emergencyContacts?.length ? user.emergencyContacts : [
+      { name: user?.emergencyContactName || 'Parent / Guardian', phone: user?.emergencyContactPhone || '+91 9988776655' }
     ];
 
-    const sosRecord = await SOS.create({
+    const sosRecord = new SOS({
       userId,
       rideId: rideId || null,
       location: {
@@ -26,13 +33,23 @@ const triggerSOS = async (req, res) => {
       status: 'ACTIVE_EMERGENCY'
     });
 
+    await sosRecord.save();
+
     // Notify Admin via Notification model
-    await Notification.create({
+    const notif = new Notification({
       userId,
+      recipientId: userId,
+      isGlobal: true,
       title: '🚨 EMERGENCY SOS ALERT ACTIVATED',
       message: `Emergency SOS triggered by ${user ? user.name : 'Rider'} at ${sosRecord.location.addressName}`,
       type: 'SOS_ALERT'
     });
+    await notif.save();
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('sos_alert', sosRecord);
+    }
 
     res.status(201).json({
       success: true,
@@ -40,7 +57,8 @@ const triggerSOS = async (req, res) => {
       sosRecord
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('[Trigger SOS Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -50,7 +68,8 @@ const getActiveSOSAlerts = async (req, res) => {
     const alerts = await SOS.find({ status: 'ACTIVE_EMERGENCY' }).populate('userId', 'name phone email role').sort({ createdAt: -1 });
     res.json({ success: true, count: alerts.length, alerts });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('[Get Active SOS Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -61,7 +80,7 @@ const resolveSOSAlert = async (req, res) => {
     const { adminNotes } = req.body;
 
     const sos = await SOS.findById(sosId);
-    if (!sos) return res.status(404).json({ message: 'SOS record not found' });
+    if (!sos) return res.status(404).json({ success: false, message: 'SOS record not found' });
 
     sos.status = 'RESOLVED';
     sos.adminNotes = adminNotes || 'Incident verified safe by admin response team';
@@ -69,7 +88,8 @@ const resolveSOSAlert = async (req, res) => {
 
     res.json({ success: true, message: 'SOS alert resolved successfully', sos });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('[Resolve SOS Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

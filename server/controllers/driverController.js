@@ -5,12 +5,19 @@ const User = require('../models/User');
 // Register as Driver & Add Vehicle
 const registerDriver = async (req, res) => {
   try {
+    console.log("Incoming POST:", req.originalUrl);
+    console.log(req.body);
+
     const { licenseNumber, licenseExpiry, make, model, plateNumber, color, vehicleType, fuelType } = req.body;
-    const userId = req.user._id;
+    const userId = req.user?._id || req.body.userId;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'userId is required for driver registration.' });
+    }
 
     let driver = await Driver.findOne({ userId });
     if (!driver) {
-      driver = await Driver.create({
+      driver = new Driver({
         userId,
         licenseNumber: licenseNumber || 'DL-2024-987654321',
         licenseExpiry: licenseExpiry || '2028-12-31',
@@ -20,9 +27,10 @@ const registerDriver = async (req, res) => {
         completedRidesCount: 28,
         averageRating: 4.9
       });
+      await driver.save();
     }
 
-    const vehicle = await Vehicle.create({
+    const vehicle = new Vehicle({
       driverId: driver._id,
       make: make || 'Tata',
       model: model || 'Nexon EV',
@@ -32,6 +40,7 @@ const registerDriver = async (req, res) => {
       fuelType: fuelType || 'Electric',
       isVerified: true
     });
+    await vehicle.save();
 
     driver.activeVehicleId = vehicle._id;
     await driver.save();
@@ -46,14 +55,16 @@ const registerDriver = async (req, res) => {
       vehicle
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('[Register Driver Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // Get Driver Dashboard & Earnings
 const getDriverEarnings = async (req, res) => {
   try {
-    const driver = await Driver.findOne({ userId: req.user._id }).populate('activeVehicleId');
+    const userId = req.user?._id || req.query.userId;
+    const driver = await Driver.findOne({ userId }).populate('activeVehicleId');
     
     res.json({
       success: true,
@@ -75,7 +86,8 @@ const getDriverEarnings = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('[Get Driver Earnings Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
