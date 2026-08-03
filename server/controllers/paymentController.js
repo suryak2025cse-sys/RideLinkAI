@@ -36,18 +36,38 @@ const createRazorpayOrder = async (req, res) => {
   }
 };
 
-// Verify Razorpay Payment / Topup Wallet
+// Verify Razorpay Payment Signature / Topup Wallet
 const verifyPaymentAndTopup = async (req, res) => {
   try {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, amount, paymentMethod } = req.body;
 
-    const user = await User.findById(req.user._id);
-    const topupAmount = parseFloat(amount) || 200.0;
+    const secret = process.env.RAZORPAY_KEY_SECRET;
 
-    if (user) {
-      user.walletBalance += topupAmount;
-      await user.save();
+    // Verify HMAC signature if Razorpay signature is provided
+    if (razorpayOrderId && razorpayPaymentId && razorpaySignature && secret) {
+      const body = razorpayOrderId + '|' + razorpayPaymentId;
+      const expectedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(body.toString())
+        .digest('hex');
+
+      if (expectedSignature !== razorpaySignature) {
+        return res.status(400).json({ success: false, message: 'Invalid payment signature. Verification failed.' });
+      }
     }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const topupAmount = parseFloat(amount) || 0;
+    if (topupAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid topup amount' });
+    }
+
+    user.walletBalance += topupAmount;
+    await user.save();
 
     const payment = await Payment.create({
       userId: req.user._id,
@@ -62,7 +82,7 @@ const verifyPaymentAndTopup = async (req, res) => {
     res.json({
       success: true,
       message: `Successfully topped up ₹${topupAmount} to RideLink Wallet`,
-      newBalance: user ? user.walletBalance : 450.0,
+      newBalance: user.walletBalance,
       payment
     });
   } catch (error) {

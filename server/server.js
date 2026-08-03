@@ -29,7 +29,8 @@ const server = http.createServer(app);
 // Socket.io Setup
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: true,
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
   }
 });
@@ -37,9 +38,9 @@ const io = new Server(server, {
 // Attach Socket.io instance to Express App
 app.set('io', io);
 
-// Middleware
+// Middleware - Dynamic CORS reflection for credentials compatibility
 app.use(cors({
-  origin: '*',
+  origin: (origin, callback) => callback(null, true),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 }));
@@ -64,7 +65,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/communities', communityRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
-app.use('/api/reviews', reviewRoutes);
+app.use('/api/review', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Error Middleware
@@ -83,6 +84,5 @@ server.listen(PORT, HOST, () => {
   console.log(` ⚡ Socket.io Real-time Engine active`);
   console.log(`====================================================`);
   
-  // Connect to MongoDB asynchronously after port binding
   connectDB();
 });

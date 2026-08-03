@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  recipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  isGlobal: { type: Boolean, default: false },
   title: { type: String, required: true },
   message: { type: String, required: true },
   type: { 

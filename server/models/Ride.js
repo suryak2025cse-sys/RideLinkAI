@@ -20,8 +20,8 @@ const rideSchema = new mongoose.Schema({
   destLat: { type: Number, required: true },
   destLng: { type: Number, required: true },
 
-  departureTime: { type: Date, required: true },
-  departureTimeMinutes: { type: Number, default: 540 }, // 09:00 AM in minutes from 00:00
+  departureTime: { type: mongoose.Schema.Types.Mixed, default: Date.now },
+  departureTimeMinutes: { type: Number, default: 540 },
 
   totalSeats: { type: Number, required: true, default: 3 },
   availableSeats: { type: Number, required: true, default: 3 },
@@ -29,6 +29,7 @@ const rideSchema = new mongoose.Schema({
 
   communityType: { type: String, enum: ['Open Community', 'Campus Mode', 'Corporate Mode', 'Residential Community'], default: 'Campus Mode' },
   communityName: { type: String, default: 'Greenwood Tech University' },
+  organizationName: { type: String, default: '' },
 
   isWomenOnly: { type: Boolean, default: false },
   

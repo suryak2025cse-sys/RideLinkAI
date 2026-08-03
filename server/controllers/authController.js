@@ -6,8 +6,8 @@ const TrustScore = require('../models/TrustScore');
 
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user._id || '660a1234567890abcdef1234', name: user.name, email: user.email, role: user.role },
-    process.env.JWT_SECRET || 'ridelink_super_secret_jwt_key_2026',
+    { id: user._id, name: user.name, email: user.email, role: user.role },
+    process.env.JWT_SECRET || 'ridelink_production_jwt_secret_key_v1_secure_2026',
     { expiresIn: '30d' }
   );
 };
@@ -21,47 +21,29 @@ const googleAuth = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Google email is required.' });
     }
 
-    let user;
+    let user = await User.findOne({ email });
 
-    if (mongoose.connection.readyState === 1) {
-      user = await User.findOne({ email });
-
-      if (!user) {
-        user = await User.create({
-          name: name || email.split('@')[0],
-          email,
-          phone: '+91 9025953166',
-          role: role || 'Passenger',
-          gender: 'Male',
-          organizationName: 'Sri Eshwar College of Engineering',
-          profilePicture: picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-          isAadhaarVerified: false,
-          isLicenseVerified: false,
-          trustScore: 90,
-          trustBadge: 'Google Verified User'
-        });
-
-        await TrustScore.create({
-          userId: user._id,
-          trustScore: 90.0,
-          trustBadge: 'Google Verified User',
-          badgeColor: 'emerald'
-        }).catch(() => null);
-      }
-    } else {
-      user = {
-        _id: 'google_user_' + Date.now(),
+    if (!user) {
+      user = await User.create({
         name: name || email.split('@')[0],
         email,
-        phone: '+91 9025953166',
+        phone: '',
         role: role || 'Passenger',
+        gender: 'Male',
+        organizationName: 'Sri Eshwar College of Engineering',
         profilePicture: picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
         isAadhaarVerified: false,
         isLicenseVerified: false,
-        walletBalance: 250.0,
         trustScore: 90,
         trustBadge: 'Google Verified User'
-      };
+      });
+
+      await TrustScore.create({
+        userId: user._id,
+        trustScore: 90.0,
+        trustBadge: 'Google Verified User',
+        badgeColor: 'emerald'
+      }).catch(() => null);
     }
 
     const token = generateToken(user);
@@ -97,53 +79,34 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Name, email, and password are required.' });
     }
 
-    let user;
-
-    if (mongoose.connection.readyState === 1) {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ success: false, message: 'User already exists with this email address.' });
-      }
-
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      user = await User.create({
-        name,
-        email,
-        password: hashedPassword,
-        phone: phone || '+91 9025953166',
-        role: role || 'Passenger',
-        gender: gender || 'Male',
-        organizationName: organizationName || 'Sri Eshwar College of Engineering',
-        isAadhaarVerified: false,
-        isLicenseVerified: false,
-        trustScore: 80,
-        trustBadge: 'New Member'
-      });
-
-      await TrustScore.create({
-        userId: user._id,
-        trustScore: 80.0,
-        trustBadge: 'New Member',
-        badgeColor: 'amber'
-      }).catch(() => null);
-    } else {
-      user = {
-        _id: 'user_' + Date.now(),
-        name,
-        email,
-        phone: phone || '+91 9025953166',
-        role: role || 'Passenger',
-        gender: gender || 'Male',
-        organizationName: organizationName || 'Sri Eshwar College of Engineering',
-        isAadhaarVerified: false,
-        isLicenseVerified: false,
-        walletBalance: 0,
-        trustScore: 80,
-        trustBadge: 'New Member'
-      };
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'User already exists with this email address.' });
     }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      phone: phone || '',
+      role: role || 'Passenger',
+      gender: gender || 'Male',
+      organizationName: organizationName || 'Sri Eshwar College of Engineering',
+      isAadhaarVerified: false,
+      isLicenseVerified: false,
+      trustScore: 80,
+      trustBadge: 'New Member'
+    });
+
+    await TrustScore.create({
+      userId: user._id,
+      trustScore: 80.0,
+      trustBadge: 'New Member',
+      badgeColor: 'amber'
+    }).catch(() => null);
 
     const token = generateToken(user);
     return res.status(201).json({
@@ -170,36 +133,23 @@ const registerUser = async (req, res) => {
   }
 };
 
-// Login User
+// Login User - Strict Authentication (No backdoor, no fake user generation)
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    let user;
 
-    if (mongoose.connection.readyState === 1) {
-      user = await User.findOne({ email });
-      if (user) {
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch && password !== 'password123' && password !== 'CodeShift18') {
-          return res.status(401).json({ success: false, message: 'Invalid email or password' });
-        }
-      }
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required.' });
     }
 
+    const user = await User.findOne({ email });
     if (!user) {
-      user = {
-        _id: 'user_' + Date.now(),
-        name: email.split('@')[0].toUpperCase(),
-        email,
-        role: 'Passenger',
-        gender: 'Male',
-        organizationName: 'Sri Eshwar College of Engineering',
-        isAadhaarVerified: false,
-        isLicenseVerified: false,
-        walletBalance: 0,
-        trustScore: 80,
-        trustBadge: 'New Member'
-      };
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
     const token = generateToken(user);
@@ -216,7 +166,9 @@ const loginUser = async (req, res) => {
         isLicenseVerified: !!user.isLicenseVerified,
         walletBalance: user.walletBalance || 0,
         trustScore: user.trustScore || 80,
-        trustBadge: user.trustBadge || 'New Member'
+        trustBadge: user.trustBadge || 'New Member',
+        emergencyContactName: user.emergencyContactName || (user.emergencyContacts?.[0]?.name || ''),
+        emergencyContactPhone: user.emergencyContactPhone || (user.emergencyContacts?.[0]?.phone || '')
       },
       token
     });
@@ -228,11 +180,9 @@ const loginUser = async (req, res) => {
 // Get User Profile
 const getUserProfile = async (req, res) => {
   try {
-    if (mongoose.connection.readyState === 1 && req.user?._id) {
-      const user = await User.findById(req.user._id).select('-password');
-      if (user) return res.json({ success: true, user });
-    }
-    res.json({ success: true, user: req.user });
+    const user = await User.findById(req.user._id).select('-password');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, user });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -241,49 +191,41 @@ const getUserProfile = async (req, res) => {
 // Update Verifications (Explicit User Action Required)
 const updateProfileVerifications = async (req, res) => {
   try {
-    const { aadhaarNumber, licenseNumber, emergencyContacts, preferences } = req.body;
-    let user = req.user;
+    const { aadhaarNumber, licenseNumber, emergencyContacts, emergencyContactName, emergencyContactPhone, preferences } = req.body;
+    
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     const isAadhaarGiven = !!(aadhaarNumber && aadhaarNumber.trim().length > 5);
     const isLicenseGiven = !!(licenseNumber && licenseNumber.trim().length > 5);
 
-    if (mongoose.connection.readyState === 1 && req.user?._id) {
-      user = await User.findById(req.user._id);
-      if (user) {
-        if (isAadhaarGiven) {
-          user.aadhaarNumber = aadhaarNumber;
-          user.isAadhaarVerified = true;
-        }
-        if (isLicenseGiven) {
-          user.licenseNumber = licenseNumber;
-          user.isLicenseVerified = true;
-        }
-        if (isAadhaarGiven && isLicenseGiven) {
-          user.trustScore = 98;
-          user.trustBadge = 'Highly Verified Driver';
-        }
-        if (emergencyContacts) {
-          user.emergencyContacts = emergencyContacts;
-        }
-        if (preferences) {
-          user.preferences = { ...user.preferences, ...preferences };
-        }
-        await user.save();
-      }
+    if (isAadhaarGiven) {
+      user.aadhaarNumber = aadhaarNumber;
+      user.isAadhaarVerified = true;
     }
+    if (isLicenseGiven) {
+      user.licenseNumber = licenseNumber;
+      user.isLicenseVerified = true;
+    }
+    if (isAadhaarGiven && isLicenseGiven) {
+      user.trustScore = 98;
+      user.trustBadge = 'Highly Verified Driver';
+    }
+    if (emergencyContacts) {
+      user.emergencyContacts = emergencyContacts;
+    }
+    if (emergencyContactName) user.emergencyContactName = emergencyContactName;
+    if (emergencyContactPhone) user.emergencyContactPhone = emergencyContactPhone;
+
+    if (preferences) {
+      user.preferences = { ...user.preferences, ...preferences };
+    }
+    await user.save();
 
     res.json({
       success: true,
       message: 'Profile verifications updated successfully',
-      user: {
-        ...(user ? user._doc : req.user),
-        isAadhaarVerified: isAadhaarGiven,
-        isLicenseVerified: isLicenseGiven,
-        aadhaarNumber: aadhaarNumber || '',
-        licenseNumber: licenseNumber || '',
-        trustScore: (isAadhaarGiven && isLicenseGiven) ? 98 : 80,
-        trustBadge: (isAadhaarGiven && isLicenseGiven) ? 'Highly Verified Driver' : 'New Member'
-      }
+      user
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
