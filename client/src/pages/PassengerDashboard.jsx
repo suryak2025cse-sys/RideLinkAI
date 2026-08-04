@@ -19,6 +19,8 @@ export default function PassengerDashboard() {
 
   const [pickup, setPickup] = useState('');
   const [destination, setDestination] = useState('');
+  const [activeSearch, setActiveSearch] = useState({ pickup: '', destination: '' });
+
   const [seats, setSeats] = useState(1);
   const [womenOnlyFilter, setWomenOnlyFilter] = useState(false);
   const [communityFilter, setCommunityFilter] = useState('All');
@@ -35,7 +37,7 @@ export default function PassengerDashboard() {
   const [emergencyName, setEmergencyName] = useState(user?.emergencyContactName || '');
   const [emergencyPhone, setEmergencyPhone] = useState(user?.emergencyContactPhone || '');
 
-  const fetchRides = async (searchPickup = pickup, searchDrop = destination) => {
+  const fetchRides = async (searchPickup = activeSearch.pickup, searchDrop = activeSearch.destination) => {
     try {
       setLoading(true);
       const res = await API.get('/rides/match', {
@@ -58,7 +60,7 @@ export default function PassengerDashboard() {
   };
 
   useEffect(() => {
-    fetchRides();
+    fetchRides(activeSearch.pickup, activeSearch.destination);
 
     // Live real-time socket listeners for instant multi-user synchronization
     if (socket) {
@@ -77,7 +79,7 @@ export default function PassengerDashboard() {
     }
 
     const interval = setInterval(() => {
-      fetchRides();
+      fetchRides(activeSearch.pickup, activeSearch.destination);
     }, 5000);
 
     return () => {
@@ -88,15 +90,23 @@ export default function PassengerDashboard() {
       }
       clearInterval(interval);
     };
-  }, [womenOnlyFilter, communityFilter, selectedOrganization]);
+  }, [womenOnlyFilter, communityFilter, selectedOrganization, activeSearch]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    setActiveSearch({ pickup, destination });
     fetchRides(pickup, destination);
     const resultsElement = document.getElementById('available-rides');
     if (resultsElement) {
       resultsElement.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const handleClearSearch = () => {
+    setPickup('');
+    setDestination('');
+    setActiveSearch({ pickup: '', destination: '' });
+    fetchRides('', '');
   };
 
   const handleBookRideClick = (ride) => {
@@ -154,6 +164,8 @@ export default function PassengerDashboard() {
       setBookingRideId(null);
     }
   };
+
+  const isSearchActive = !!(activeSearch.pickup || activeSearch.destination);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
@@ -269,13 +281,26 @@ export default function PassengerDashboard() {
                 </div>
               </div>
 
-              <button 
-                type="submit" 
-                className="btn-primary w-full py-4 text-xl font-black shadow-rapido-yellow text-white rounded-2xl flex items-center justify-center gap-2"
-              >
-                <span>Search & Book Ride</span>
-                <ArrowRight className="w-6 h-6" />
-              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  type="submit" 
+                  className="btn-primary flex-1 py-4 text-xl font-black shadow-rapido-yellow text-white rounded-2xl flex items-center justify-center gap-2"
+                >
+                  <span>Search & Book Ride</span>
+                  <ArrowRight className="w-6 h-6" />
+                </button>
+
+                {isSearchActive && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold px-5 py-4 rounded-2xl text-sm border border-slate-300 flex items-center gap-1.5"
+                  >
+                    <X className="w-5 h-5 text-slate-600" />
+                    <span>Clear Search</span>
+                  </button>
+                )}
+              </div>
             </form>
           </div>
         </div>
@@ -362,11 +387,20 @@ export default function PassengerDashboard() {
         {/* Right Column: AI Matched Ride Cards */}
         <div className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-black text-2xl text-slate-900">
-              Available Rides ({rides.length})
-            </h3>
+            <div className="flex items-center gap-3">
+              <h3 className="font-black text-2xl text-slate-900">
+                Available Rides ({rides.length})
+              </h3>
+              {isSearchActive && (
+                <span className="bg-emerald-100 border border-emerald-300 text-emerald-900 font-extrabold text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                  <span>Filtered Search Active</span>
+                  <button onClick={handleClearSearch} className="ml-1 hover:text-rose-600">✕</button>
+                </span>
+              )}
+            </div>
+
             <button
-              onClick={() => fetchRides()}
+              onClick={() => fetchRides(activeSearch.pickup, activeSearch.destination)}
               className="text-xs font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-full"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-500' : ''}`} />
@@ -381,11 +415,11 @@ export default function PassengerDashboard() {
             </div>
           ) : rides.length === 0 ? (
             <EmptyState
-              title="No Active Rides Found"
-              description="No active rides matching your search criteria. Offer a ride in Driver Portal or refresh live matches!"
+              title={isSearchActive ? `No Rides Found for "${activeSearch.pickup || activeSearch.destination}"` : "No Active Rides Found"}
+              description={isSearchActive ? "Try clearing your search term or searching another location!" : "No active rides matching your search criteria. Offer a ride in Driver Portal or refresh live matches!"}
               icon={Search}
-              actionLabel="Refresh Live Matches"
-              onAction={() => fetchRides('', '')}
+              actionLabel={isSearchActive ? "Clear Search & Show All Rides" : "Refresh Live Matches"}
+              onAction={handleClearSearch}
             />
           ) : (
             <div className="space-y-4">
