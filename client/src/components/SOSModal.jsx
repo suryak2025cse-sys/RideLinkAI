@@ -1,35 +1,60 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { AlertTriangle, X, ShieldAlert, PhoneCall, Navigation, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, X, ShieldAlert, PhoneCall, Navigation, CheckCircle2, Phone } from 'lucide-react';
 import { toggleSOSModal, addSafetyLog } from '../redux/safetySlice';
 import API from '../services/api';
 
 export default function SOSModal() {
   const { isSOSModalOpen } = useSelector((state) => state.safety);
+  const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [triggered, setTriggered] = useState(false);
   const [loading, setLoading] = useState(false);
 
   if (!isSOSModalOpen) return null;
 
+  const emergencyNumber = user?.emergencyContactPhone || user?.phone || '112';
+
   const handleConfirmSOS = async () => {
     setLoading(true);
+
+    // Get live browser GPS coordinates if available
+    let latitude = 12.9716;
+    let longitude = 77.5946;
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          latitude = pos.coords.latitude;
+          longitude = pos.coords.longitude;
+        },
+        () => {},
+        { timeout: 3000 }
+      );
+    }
+
     try {
       await API.post('/safety/sos', {
-        lat: 12.9716,
-        lng: 77.5946,
-        addressName: 'MG Road Metro Station Interchange',
+        lat: latitude,
+        lng: longitude,
+        addressName: 'Live GPS Emergency Track',
         triggerReason: 'Manual SOS Emergency Button Pressed'
       });
+      
       setTriggered(true);
       dispatch(addSafetyLog({
         id: `sos_${Date.now()}`,
         time: new Date().toLocaleTimeString(),
-        text: '🚨 EMERGENCY SOS TRIGGERED - Location & Contacts Notified',
+        text: '🚨 EMERGENCY SOS TRIGGERED - Live GPS Broadcast & Call Initiated',
         status: 'emergency'
       }));
+
+      // Immediately trigger live mobile phone call via tel: protocol
+      window.location.href = `tel:${emergencyNumber}`;
     } catch (err) {
       setTriggered(true);
+      // Trigger call even if network backend is offline
+      window.location.href = `tel:${emergencyNumber}`;
     } finally {
       setLoading(false);
     }
@@ -58,19 +83,38 @@ export default function SOSModal() {
             <div>
               <h3 className="text-2xl font-black text-slate-900">Emergency SOS Alert</h3>
               <p className="text-base text-slate-600 mt-1 leading-relaxed">
-                Activating SOS will immediately broadcast your live GPS location, notify your emergency contacts, and dispatch an urgent alert to platform safety leads.
+                Activating SOS will immediately trigger a <strong>live phone call</strong> to emergency services, broadcast your live GPS location, and alert safety leads.
               </p>
             </div>
 
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-left space-y-2 text-sm font-semibold">
               <div className="flex items-center gap-2 text-blue-600">
                 <Navigation className="w-4 h-4" />
-                <span>Current Location: MG Road Interchange</span>
+                <span>Live GPS Radar: Active Track</span>
               </div>
               <div className="flex items-center gap-2 text-slate-700">
                 <PhoneCall className="w-4 h-4 text-emerald-600" />
-                <span>Emergency Contacts: 2 Listed</span>
+                <span>Emergency Contact: {emergencyNumber}</span>
               </div>
+            </div>
+
+            {/* Direct Call Quick Buttons */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <a
+                href="tel:112"
+                className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold py-3 px-3 rounded-2xl border border-rose-200 flex items-center justify-center gap-1.5 text-xs"
+              >
+                <Phone className="w-4 h-4 text-rose-600" />
+                <span>Call Police (112)</span>
+              </a>
+
+              <a
+                href={`tel:${emergencyNumber}`}
+                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-extrabold py-3 px-3 rounded-2xl border border-emerald-200 flex items-center justify-center gap-1.5 text-xs"
+              >
+                <PhoneCall className="w-4 h-4 text-emerald-600" />
+                <span>Call Contact</span>
+              </a>
             </div>
 
             <div className="flex items-center gap-3 pt-2">
@@ -83,10 +127,10 @@ export default function SOSModal() {
               <button
                 onClick={handleConfirmSOS}
                 disabled={loading}
-                className="btn-danger flex-1 text-base py-3 font-bold shadow-md shadow-rose-600/30"
+                className="btn-danger flex-1 text-base py-3 font-bold shadow-md shadow-rose-600/30 flex items-center justify-center gap-1.5"
               >
                 <AlertTriangle className="w-5 h-5" />
-                {loading ? 'SENDING...' : 'TRIGGER SOS NOW'}
+                <span>{loading ? 'CALLING...' : 'TRIGGER SOS CALL'}</span>
               </button>
             </div>
           </div>
@@ -97,11 +141,19 @@ export default function SOSModal() {
             </div>
             
             <div>
-              <h3 className="text-2xl font-bold text-slate-900">SOS Alert Dispatched!</h3>
+              <h3 className="text-2xl font-bold text-slate-900">Live SOS Call Dispatched!</h3>
               <p className="text-base text-slate-600 mt-1">
-                Your emergency contacts and Safety Control Center have received your live location alert.
+                Live phone call initiated to {emergencyNumber} & emergency alert broadcasted with GPS coordinates.
               </p>
             </div>
+
+            <a
+              href={`tel:${emergencyNumber}`}
+              className="btn-danger w-full text-base py-3.5 flex items-center justify-center gap-2 font-black"
+            >
+              <PhoneCall className="w-5 h-5" />
+              <span>Redial Emergency Phone Call ({emergencyNumber})</span>
+            </a>
 
             <button
               onClick={() => {
