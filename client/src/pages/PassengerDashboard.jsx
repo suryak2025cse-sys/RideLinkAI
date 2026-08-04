@@ -35,12 +35,13 @@ export default function PassengerDashboard() {
   const [emergencyName, setEmergencyName] = useState(user?.emergencyContactName || '');
   const [emergencyPhone, setEmergencyPhone] = useState(user?.emergencyContactPhone || '');
 
-  const fetchRides = async () => {
+  const fetchRides = async (searchPickup = pickup, searchDrop = destination) => {
     try {
+      setLoading(true);
       const res = await API.get('/rides/match', {
         params: {
-          pickupLocation: pickup,
-          destination,
+          pickupLocation: searchPickup,
+          destination: searchDrop,
           seats,
           womenOnly: womenOnlyFilter,
           communityType: communityFilter
@@ -48,16 +49,7 @@ export default function PassengerDashboard() {
       });
 
       let fetchedRides = (res.data && res.data.recommendations) ? res.data.recommendations : [];
-
-      // Filter by Organization if Campus Mode or Corporate Mode is active
-      const filteredByOrg = fetchedRides.filter(r => {
-        if (communityFilter === 'Campus Mode' || communityFilter === 'Corporate Mode') {
-          return r.organizationName ? r.organizationName.toLowerCase().includes(selectedOrganization.toLowerCase()) : true;
-        }
-        return true;
-      });
-
-      setRides(filteredByOrg);
+      setRides(fetchedRides);
     } catch (err) {
       console.log('[Fetch Rides Warning]:', err.message);
     } finally {
@@ -86,7 +78,7 @@ export default function PassengerDashboard() {
 
     const interval = setInterval(() => {
       fetchRides();
-    }, 4000);
+    }, 5000);
 
     return () => {
       if (socket) {
@@ -100,8 +92,11 @@ export default function PassengerDashboard() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-    fetchRides();
+    fetchRides(pickup, destination);
+    const resultsElement = document.getElementById('available-rides');
+    if (resultsElement) {
+      resultsElement.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const handleBookRideClick = (ride) => {
@@ -255,7 +250,7 @@ export default function PassengerDashboard() {
                     type="text"
                     value={pickup}
                     onChange={(e) => setPickup(e.target.value)}
-                    placeholder="Enter Pickup Location"
+                    placeholder="Enter Pickup Location (e.g. Hostel Gate, Campus)"
                     className="form-input pl-11 py-4 text-lg font-semibold text-slate-900 border-slate-300"
                   />
                 </div>
@@ -268,7 +263,7 @@ export default function PassengerDashboard() {
                     type="text"
                     value={destination}
                     onChange={(e) => setDestination(e.target.value)}
-                    placeholder="Enter Drop Location"
+                    placeholder="Enter Drop Location (e.g. Cyber Park, Main Bay)"
                     className="form-input pl-11 py-4 text-lg font-semibold text-slate-900 border-slate-300"
                   />
                 </div>
@@ -278,7 +273,7 @@ export default function PassengerDashboard() {
                 type="submit" 
                 className="btn-primary w-full py-4 text-xl font-black shadow-rapido-yellow text-white rounded-2xl flex items-center justify-center gap-2"
               >
-                <span>Book Ride</span>
+                <span>Search & Book Ride</span>
                 <ArrowRight className="w-6 h-6" />
               </button>
             </form>
@@ -349,7 +344,7 @@ export default function PassengerDashboard() {
       </div>
 
       {/* Main Map & Recommendations Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div id="available-rides" className="grid grid-cols-1 lg:grid-cols-12 gap-8 scroll-mt-24">
         
         {/* Left Column: OpenStreetMap Live Radar Map */}
         <div className="lg:col-span-5 space-y-4">
@@ -371,7 +366,7 @@ export default function PassengerDashboard() {
               Available Rides ({rides.length})
             </h3>
             <button
-              onClick={() => { setLoading(true); fetchRides(); }}
+              onClick={() => fetchRides()}
               className="text-xs font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-full"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-500' : ''}`} />
@@ -386,11 +381,11 @@ export default function PassengerDashboard() {
             </div>
           ) : rides.length === 0 ? (
             <EmptyState
-              title="No Active Rides Listed Right Now"
+              title="No Active Rides Found"
               description="No active rides matching your search criteria. Offer a ride in Driver Portal or refresh live matches!"
               icon={Search}
               actionLabel="Refresh Live Matches"
-              onAction={fetchRides}
+              onAction={() => fetchRides('', '')}
             />
           ) : (
             <div className="space-y-4">
