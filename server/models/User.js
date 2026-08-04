@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
   // Verifications
   isAadhaarVerified: { type: Boolean, default: false },
   aadhaarNumber: { type: String, default: '' },
+  panNumber: { type: String, default: '' },
   isLicenseVerified: { type: Boolean, default: false },
   licenseNumber: { type: String, default: '' },
   isCollegeCorporateVerified: { type: Boolean, default: false },
